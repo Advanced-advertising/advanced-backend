@@ -11,7 +11,7 @@ pub fn run_migrations(db_url: &str) {
     migrations_macros::run_with_output(&connection, &mut std::io::stdout())
         .expect("Error running migrations");
 }
- */
+*/
 
 pub fn get_pool(db_url: &str) -> Pool<ConnectionManager<PgConnection>> {
     let manager = ConnectionManager::<PgConnection>::new(db_url);
