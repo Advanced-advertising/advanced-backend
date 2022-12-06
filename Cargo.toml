@@ -15,6 +15,13 @@ dotenv = "0.15.0"
 uuid = { version = "1.2.2", features = ["v4", "serde"] }
 diesel = { version = "2.0.2", features = ["uuid", "r2d2", "postgres"] }
 diesel_migrations = "2.0.0"
+r2d2 = "0.8.10"
+
+# logs
+slog = "2.5.2"
+slog-term = "2.5.0"
+slog-async = "2.4.0"
+slog-envlogger = "2.2.0"
 
 actix-web-httpauth = "0.8.0"
 argonautica = "0.2.0"
