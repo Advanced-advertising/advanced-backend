@@ -13,6 +13,7 @@ jobs:
 
     steps:
       - run: docker compose down || true
+      - run: ls
       - run: docker rmi advanced-backend_actix_api_test:local || true
       - run: docker rmi advanced-backend_nginx:latest || true
       - run: echo ${{ secrets.ENV }} > .env
