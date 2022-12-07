@@ -1,8 +1,7 @@
-use std::os::linux::raw::stat;
 use actix_web::{HttpResponse, Responder, post, get};
 use actix_web::web::{Data, Json, ReqData};
 use actix_web_httpauth::extractors::basic::BasicAuth;
-use slog::{error, Logger, o};
+use slog::{error, info, Logger, o};
 use crate::actors::user::{AuthorizeUser, CreateUser};
 use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
@@ -16,7 +15,8 @@ fn log_error(log: Logger) -> impl Fn(AppError) -> AppError {
             "cause" => err.cause.clone()
         ));
         let message = err.message.clone().unwrap();
-        error!(log, "{}", message);
+        error!(log, "{}", "message");
+
         AppError::from(err)
     }
 }
@@ -40,7 +40,7 @@ pub async fn register_user(user: Json<UserData>, state: Data<AppState>) -> Resul
     result.map(|user| HttpResponse::Ok().json(user)).map_err(log_error(sub_log))
 }
 
-#[post("/user_login")]
+#[get("/user_login")]
 pub async fn user_login(basic_auth: BasicAuth, state: Data<AppState>) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
     let password = match basic_auth.password() {
@@ -51,18 +51,20 @@ pub async fn user_login(basic_auth: BasicAuth, state: Data<AppState>) -> Result<
             error_type: AppErrorType::SomethingWentWrong,
         }),
     };
-
     let authorise_user = AuthorizeUser {
         name: basic_auth.user_id().to_string(),
         password: password.into(),
     };
+
+    let sub_log = state.logger.new(o!("handle" => "login_user"));
+    let log = format!("{}:{}", basic_auth.user_id(), authorise_user.password.clone());
+    info!(sub_log, "{}", log);
 
     let result = match db.send(authorise_user).await {
         Ok(res) => res,
         Err(err) => return Err(AppError::from_mailbox(err))
     };
 
-    let sub_log = state.logger.new(o!("handle" => "login_user"));
     result.map(|user| HttpResponse::Ok().json(user)).map_err(log_error(sub_log))
 }
 
