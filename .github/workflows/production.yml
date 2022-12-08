@@ -17,6 +17,6 @@ jobs:
       - run: docker compose down || true
       - run: docker rmi advanced-backend_actix_api_test:local || true
       - run: docker rmi advanced-backend_nginx:latest || true
-      - run: echo ${{ secrets.ENV }} > .env
-      - run: echo ${{ secrets.ENV_DB }} > .env-db
+      - run: echo ${{ secrets.ENV }} | base64 -d > .env
+      - run: echo ${{ secrets.ENV_DB }} | base64 -d > .env-db
       - run: docker compose up -d
