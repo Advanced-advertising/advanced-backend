@@ -14,8 +14,10 @@ fn log_error(log: Logger) -> impl Fn(AppError) -> AppError {
         let log = log.new(o!(
             "cause" => err.cause.clone()
         ));
-        let message = err.message.clone().unwrap();
-        error!(log, "{}", "message");
+        match err.message.clone() {
+            Some(message) => error!(log, "{}", message),
+            None => error!(log, "Something went wrong"),
+        }
 
         AppError::from(err)
     }
@@ -56,14 +58,13 @@ pub async fn user_login(basic_auth: BasicAuth, state: Data<AppState>) -> Result<
         password: password.into(),
     };
 
-    let sub_log = state.logger.new(o!("handle" => "login_user"));
-    let log = format!("{}:{}", basic_auth.user_id(), authorise_user.password.clone());
-    info!(sub_log, "{}", log);
 
     let result = match db.send(authorise_user).await {
         Ok(res) => res,
         Err(err) => return Err(AppError::from_mailbox(err))
     };
+
+    let sub_log = state.logger.new(o!("handle" => "login_user"));
 
     result.map(|user| HttpResponse::Ok().json(user)).map_err(log_error(sub_log))
 }

@@ -5,5 +5,7 @@ CREATE TABLE screens (
     price_per_time TEXT NOT NULL,
     characteristics TEXT NOT NULL,
     business_id Uuid NOT NULL,
-    FOREIGN KEY(business_id) REFERENCES businesses (business_id)
+    address_id Uuid NOT NULL,
+    FOREIGN KEY(business_id) REFERENCES businesses (business_id),
+    FOREIGN KEY(address_id) REFERENCES addresses (address_id)
 );
