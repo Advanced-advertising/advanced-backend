@@ -23,7 +23,7 @@ impl Config {
         let db_url = dotenv::var("DATABASE_URL").expect("Error retrieving the database url");
         // run_migrations(&db_url);
         let pool = get_pool(&db_url);
-        let db_addr = SyncArbiter::start(8, move || DbActor(pool.clone()));
+        let db_addr = SyncArbiter::start(3, move || DbActor(pool.clone()));
 
         Self {
             server: ServerConfig { host: "0.0.0.0".parse().unwrap(), port: 4000 },
