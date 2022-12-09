@@ -1,11 +1,11 @@
-use serde::{Serialize, Deserialize};
-use diesel::{Queryable, Insertable};
+use diesel::{Insertable, Queryable};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::schema::businesses;
 
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
-#[table_name="businesses"]
+#[diesel(table_name = businesses)]
 pub struct Business {
     pub business_id: Uuid,
     pub business_name: String,

@@ -1,9 +1,9 @@
-use actix::{Actor, SyncContext};
-use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PoolError};
-use r2d2::PooledConnection;
-use slog::{crit, Logger, o};
 use crate::errors::AppError;
+use actix::{Actor, SyncContext};
+use diesel::r2d2::{ConnectionManager, Pool, PoolError};
+use diesel::PgConnection;
+use r2d2::PooledConnection;
+use slog::{crit, o, Logger};
 
 pub struct DbActor(pub Pool<ConnectionManager<PgConnection>>);
 
@@ -13,7 +13,7 @@ impl Actor for DbActor {
 
 pub fn get_pooled_connection(
     pool: &Pool<ConnectionManager<PgConnection>>,
-    logger: Logger
+    logger: Logger,
 ) -> Result<PooledConnection<ConnectionManager<PgConnection>>, AppError> {
     pool.get().map_err(|err: PoolError| {
         let sub_log = logger.new(o!("cause" => err.to_string()));

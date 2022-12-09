@@ -1,11 +1,11 @@
+use crate::actors::db::DbActor;
+use crate::config;
+use crate::db_utils::get_pool;
 use actix::{Addr, SyncArbiter};
 use serde::Deserialize;
 use slog::{o, Drain, Logger};
 use slog_async;
 use slog_term;
-use crate::actors::db::DbActor;
-use crate::config;
-use crate::db_utils::get_pool;
 
 #[derive(Deserialize)]
 pub struct ServerConfig {
@@ -26,7 +26,10 @@ impl Config {
         let db_addr = SyncArbiter::start(3, move || DbActor(pool.clone()));
 
         Self {
-            server: ServerConfig { host: "0.0.0.0".parse().unwrap(), port: 4000 },
+            server: ServerConfig {
+                host: "0.0.0.0".parse().unwrap(),
+                port: 4000,
+            },
             db: db_addr,
         }
     }

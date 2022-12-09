@@ -11,10 +11,10 @@ use actix_web_httpauth::{
     },
     middleware::HttpAuthentication,
 };
-use serde::{Deserialize, Serialize};
 use hmac::digest::KeyInit;
 use hmac::Hmac;
 use jwt::VerifyWithKey;
+use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use uuid::Uuid;
 

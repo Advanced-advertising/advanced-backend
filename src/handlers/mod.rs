@@ -1,8 +1,8 @@
-use slog::{error, Logger, o};
 use crate::errors::AppError;
+use slog::{error, o, Logger};
 
-pub mod user;
 pub mod business;
+pub mod user;
 
 fn log_error(log: Logger) -> impl Fn(AppError) -> AppError {
     move |err| {

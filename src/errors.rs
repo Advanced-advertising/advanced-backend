@@ -1,11 +1,11 @@
-use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
-use serde::Serialize;
-use std::fmt;
+use crate::models::user::User;
 use actix::fut::err;
 use actix::MailboxError;
-use diesel::QueryResult;
+use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use diesel::r2d2::{Error, PoolError};
-use crate::models::user::User;
+use diesel::QueryResult;
+use serde::Serialize;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum AppErrorType {
@@ -52,7 +52,7 @@ impl From<PoolError> for AppError {
         AppError {
             message: None,
             cause: Some(error.to_string()),
-            error_type: AppErrorType::DbError
+            error_type: AppErrorType::DbError,
         }
     }
 }
@@ -62,7 +62,7 @@ impl From<Error> for AppError {
         AppError {
             message: None,
             cause: Some(error.to_string()),
-            error_type: AppErrorType::DbError
+            error_type: AppErrorType::DbError,
         }
     }
 }
@@ -72,7 +72,7 @@ impl From<diesel::result::Error> for AppError {
         AppError {
             message: None,
             cause: Some(error.to_string()),
-            error_type: AppErrorType::DbError
+            error_type: AppErrorType::DbError,
         }
     }
 }
@@ -91,9 +91,9 @@ pub struct AppErrorResponse {
 impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self.error_type {
-            AppErrorType::DbError |
-            AppErrorType::ConfigError |
-            AppErrorType::SomethingWentWrong => StatusCode::INTERNAL_SERVER_ERROR,
+            AppErrorType::DbError
+            | AppErrorType::ConfigError
+            | AppErrorType::SomethingWentWrong => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
         }
     }

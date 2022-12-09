@@ -1,34 +1,33 @@
 extern crate actix;
-#[macro_use]
 extern crate diesel;
-#[macro_use]
 extern crate diesel_migrations;
 
-mod schema;
 mod actors;
-mod handlers;
-mod models;
-mod db_utils;
-mod middleware;
-mod errors;
 mod config;
+mod db_utils;
+mod errors;
+mod files;
+mod handlers;
+mod middleware;
+mod models;
+mod schema;
 
-use std::env;
-use actix_web::{App, http, HttpServer, web};
-use actix_cors::Cors;
-use actix::SyncArbiter;
-use actix_form_data::{Error, Field, Form};
-use actix_web::web::{Data, get};
-use actix_web_httpauth::middleware::HttpAuthentication;
-use dotenv::dotenv;
-use slog::{debug, info};
 use crate::actors::db::DbActor;
 use crate::config::Config;
-use crate::db_utils::{get_pool};
-use crate::handlers::user::{user_login, register_user, get_screens};
+use crate::db_utils::get_pool;
+use crate::handlers::user::{get_screens, register_user, user_login};
 use crate::middleware::token::validator;
 use crate::models::app_state::AppState;
+use actix::SyncArbiter;
+use actix_cors::Cors;
+use actix_form_data::{Error, Field, Form};
+use actix_web::web::{get, Data};
+use actix_web::{http, web, App, HttpServer};
+use actix_web_httpauth::middleware::HttpAuthentication;
+use dotenv::dotenv;
 use futures_util::stream::StreamExt;
+use slog::{debug, info};
+use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -60,7 +59,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/screens")
                     .wrap(bearer_middleware)
-                    .service(get_screens)
+                    .service(get_screens),
             )
     })
     .bind(format!("{}:{}", config.server.host, config.server.port))?

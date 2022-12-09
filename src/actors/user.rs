@@ -1,32 +1,31 @@
+use crate::actors::db::{get_pooled_connection, DbActor};
+use crate::errors::{AppError, AppErrorType};
+use crate::middleware::token::TokenClaims;
+use crate::models::user::User;
+use crate::schema::users::dsl::{user_id, user_name, users};
 use actix::{ActorContext, Handler, Message};
 use argonautica::{Hasher, Verifier};
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Error, Pool, PooledConnection, PoolError};
+use diesel::r2d2::{ConnectionManager, Error, Pool, PoolError, PooledConnection};
 use hmac::digest::KeyInit;
 use hmac::Hmac;
 use jwt::SignWithKey;
 use serde::Deserialize;
 use sha2::Sha256;
-use slog::{crit, error, Logger, o};
+use slog::{crit, error, o, Logger};
 use uuid::Uuid;
-use crate::actors::db::{DbActor, get_pooled_connection};
-use crate::errors::{AppError, AppErrorType};
-use crate::middleware::token::TokenClaims;
-use crate::models::user::User;
-use crate::schema::users::dsl::{users, user_id, user_name};
 
 #[derive(Message)]
-#[rtype(result="Result<User, AppError>")]
+#[rtype(result = "Result<User, AppError>")]
 pub struct CreateUser {
     pub name: String,
     pub email: String,
     pub password: String,
-    pub logger: Logger
+    pub logger: Logger,
 }
 
-#[derive(Message)]
-#[derive(Deserialize)]
-#[rtype(result="Result<String, AppError>")]
+#[derive(Message, Deserialize)]
+#[rtype(result = "Result<String, AppError>")]
 pub struct AuthorizeUser {
     pub name: String,
     pub password: String,
@@ -70,15 +69,16 @@ impl Handler<AuthorizeUser> for DbActor {
                 .expect("JWT_SECRET must be set!")
                 .as_bytes(),
         )
-            .unwrap();
+        .unwrap();
         let username = msg.name;
         let password = msg.password;
 
         let mut conn = self.0.get().expect("Unable to get a connection");
-        let user = users.filter(user_name.eq(username)).get_result::<User>(&mut conn)?;
+        let user = users
+            .filter(user_name.eq(username))
+            .get_result::<User>(&mut conn)?;
 
-        let hash_secret =
-            std::env::var("HASH_SECRET").expect("HASH_SECRET must be set!");
+        let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set!");
         let mut verifier = Verifier::default();
         let is_valid = verifier
             .with_hash(user.password)
@@ -88,7 +88,7 @@ impl Handler<AuthorizeUser> for DbActor {
             .unwrap();
 
         if is_valid {
-            let claims = TokenClaims { id: user.user_id};
+            let claims = TokenClaims { id: user.user_id };
             let token_str = claims.sign_with_key(&jwt_secret).unwrap();
             Ok(token_str)
         } else {
