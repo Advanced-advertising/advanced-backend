@@ -15,7 +15,6 @@ mod schema;
 use crate::actors::db::DbActor;
 use crate::config::Config;
 use crate::db_utils::get_pool;
-use crate::handlers::user::{get_screens, register_user, user_login};
 use crate::middleware::token::validator;
 use crate::models::app_state::AppState;
 use actix::SyncArbiter;
@@ -54,12 +53,19 @@ async fn main() -> std::io::Result<()> {
             }))
             .wrap(cors)
             .wrap(actix_web::middleware::Logger::default())
-            .service(register_user)
-            .service(user_login)
+            .service(
+                web::scope("/users")
+                    .service(handlers::user::register)
+                    .service(handlers::user::login)
+            )
+            .service(
+                web::scope("/businesses")
+                    .service(handlers::business::register)
+                    .service(handlers::business::login)
+            )
             .service(
                 web::scope("/screens")
                     .wrap(bearer_middleware)
-                    .service(get_screens),
             )
     })
     .bind(format!("{}:{}", config.server.host, config.server.port))?

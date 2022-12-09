@@ -2,7 +2,7 @@ use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
 use crate::models::user::User;
-use crate::schema::users::dsl::{user_id, user_name, users};
+use crate::schema::users::dsl::{user_name, users};
 use actix::{ActorContext, Handler, Message};
 use argonautica::{Hasher, Verifier};
 use diesel::prelude::*;

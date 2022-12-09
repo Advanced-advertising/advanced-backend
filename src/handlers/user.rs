@@ -1,6 +1,6 @@
 use crate::actors::user::{AuthorizeUser, CreateUser};
 use crate::errors::{AppError, AppErrorType};
-use crate::files::save_file;
+use crate::files::save_files;
 use crate::handlers::log_error;
 use crate::middleware::token::TokenClaims;
 use crate::models::app_state::AppState;
@@ -19,7 +19,7 @@ use std::fs::File;
 use std::io::Write;
 
 #[post("/register")]
-pub async fn register_user(
+pub async fn register(
     user: Json<UserData>,
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
@@ -45,8 +45,8 @@ pub async fn register_user(
         .map_err(log_error(sub_log))
 }
 
-#[get("/user_login")]
-pub async fn user_login(
+#[get("/login")]
+pub async fn login(
     basic_auth: BasicAuth,
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
@@ -61,6 +61,7 @@ pub async fn user_login(
             })
         }
     };
+
     let authorise_user = AuthorizeUser {
         name: basic_auth.user_id().to_string(),
         password: password.into(),
@@ -71,31 +72,9 @@ pub async fn user_login(
         Err(err) => return Err(AppError::from_mailbox(err)),
     };
 
-    let sub_log = state.logger.new(o!("handle" => "login_user"));
+    let sub_log = state.logger.new(o!("handle" => "login"));
 
     result
         .map(|user| HttpResponse::Ok().json(user))
         .map_err(log_error(sub_log))
-}
-
-#[post("/get_screens")]
-pub async fn get_screens(
-    mut payload: Multipart,
-    req: Option<ReqData<TokenClaims>>,
-    state: Data<AppState>,
-) -> impl Responder {
-    match req {
-        Some(user) => {
-            let upload_status = save_file(payload).await;
-            match upload_status {
-                Ok(paths) => HttpResponse::Ok()
-                    .content_type("text/plain")
-                    .body(serde_json::to_string(&paths).unwrap()),
-                _ => HttpResponse::BadRequest()
-                    .content_type("text/plain")
-                    .body("update_failed"),
-            }
-        }
-        _ => HttpResponse::Unauthorized().json("Unable to verify identity"),
-    }
 }
