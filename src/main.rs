@@ -17,6 +17,7 @@ use std::env;
 use actix_web::{App, http, HttpServer, web};
 use actix_cors::Cors;
 use actix::SyncArbiter;
+use actix_form_data::{Error, Field, Form};
 use actix_web::web::{Data, get};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
@@ -27,6 +28,7 @@ use crate::db_utils::{get_pool};
 use crate::handlers::user::{user_login, register_user, get_screens};
 use crate::middleware::token::validator;
 use crate::models::app_state::AppState;
+use futures_util::stream::StreamExt;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

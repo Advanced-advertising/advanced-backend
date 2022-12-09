@@ -9,7 +9,7 @@ use serde::Deserialize;
 use sha2::Sha256;
 use slog::{crit, error, Logger, o};
 use uuid::Uuid;
-use crate::actors::db::DbActor;
+use crate::actors::db::{DbActor, get_pooled_connection};
 use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
 use crate::models::user::User;
@@ -31,27 +31,6 @@ pub struct AuthorizeUser {
     pub name: String,
     pub password: String,
 }
-
-#[derive(Message)]
-#[rtype(result="QueryResult<User>")]
-pub struct UpdateUser {
-    pub uuid: Uuid,
-    pub name: String,
-    pub email: String,
-    pub password: String,
-}
-
-fn get_pooled_connection(
-    pool: &Pool<ConnectionManager<PgConnection>>,
-    logger: Logger
-) -> Result<PooledConnection<ConnectionManager<PgConnection>>, AppError> {
-    pool.get().map_err(|err: PoolError| {
-        let sub_log = logger.new(o!("cause" => err.to_string()));
-        crit!(sub_log, "Error getting pooled connection");
-        AppError::from(err)
-    })
-}
-
 
 impl Handler<CreateUser> for DbActor {
     type Result = Result<User, AppError>;
