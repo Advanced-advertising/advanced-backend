@@ -73,7 +73,8 @@ impl Handler<AuthorizeUser> for DbActor {
         let username = msg.name;
         let password = msg.password;
 
-        let mut conn = self.0.get().expect("Unable to get a connection");
+        let mut conn = self.0.get()?;
+
         let user = users
             .filter(user_name.eq(username))
             .get_result::<User>(&mut conn)?;

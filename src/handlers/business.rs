@@ -1,16 +1,16 @@
-use std::arch::asm;
-use actix_multipart::Multipart;
-use actix_web::{HttpResponse, Responder, get, post};
-use actix_web::web::{Data, Json, ReqData};
-use actix_web_httpauth::extractors::basic::BasicAuth;
-use slog::o;
 use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness};
 use crate::errors::{AppError, AppErrorType};
 use crate::files::save_files;
-use crate::handlers::{log_error};
+use crate::handlers::log_error;
 use crate::middleware::token::TokenClaims;
 use crate::models::app_state::AppState;
 use crate::models::business::BusinessData;
+use actix_multipart::Multipart;
+use actix_web::web::{Data, Json, ReqData};
+use actix_web::{get, post, HttpResponse, Responder};
+use actix_web_httpauth::extractors::basic::BasicAuth;
+use slog::o;
+use std::arch::asm;
 
 #[post("/register")]
 pub async fn register(
@@ -79,19 +79,22 @@ pub async fn login(
 pub async fn change_img(
     mut payload: Multipart,
     req: Option<ReqData<TokenClaims>>,
-    state: Data<AppState>
+    state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
     match req {
         Some(business) => {
             let img_url = match save_files(payload).await {
                 Ok(paths) => match paths.get(0) {
                     None => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
-                    Some(path) => path.clone()
+                    Some(path) => path.clone(),
                 },
                 _ => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
             };
 
-            let change_img = ChangeImg { business_id: business.id, img_url };
+            let change_img = ChangeImg {
+                business_id: business.id,
+                img_url,
+            };
             let db = state.as_ref().db.clone();
 
             let result = match db.send(change_img).await {

@@ -54,19 +54,26 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(actix_web::middleware::Logger::default())
             .service(
+                web::scope("/categories")
+                    .service(handlers::category::create)
+                    .service(handlers::category::get_categories)
+            )
+            .service(
                 web::scope("/users")
                     .service(handlers::user::register)
-                    .service(handlers::user::login)
+                    .service(handlers::user::login),
             )
             .service(
                 web::scope("/businesses")
                     .service(handlers::business::register)
                     .service(handlers::business::login)
+                    .service(
+                        web::scope("")
+                            .wrap(bearer_middleware.clone())
+                            .service(handlers::business::change_img),
+                    ),
             )
-            .service(
-                web::scope("/screens")
-                    .wrap(bearer_middleware)
-            )
+            .service(web::scope("/screens").wrap(bearer_middleware))
     })
     .bind(format!("{}:{}", config.server.host, config.server.port))?
     .run()

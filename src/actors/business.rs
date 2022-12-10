@@ -2,7 +2,7 @@ use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
 use crate::models::business::Business;
-use crate::schema::businesses::dsl::{business_name, businesses};
+use crate::schema::businesses::dsl::{business_id, business_name, businesses, img_url};
 use actix::{ActorContext, Handler, Message};
 use argonautica::{Hasher, Verifier};
 use diesel::prelude::*;
@@ -52,7 +52,7 @@ impl Handler<CreateBusiness> for DbActor {
             .hash()
             .unwrap();
 
-        let new_user = Business {
+        let new_business = Business {
             business_id: Uuid::new_v4(),
             business_name: msg.name,
             email: msg.email,
@@ -64,7 +64,7 @@ impl Handler<CreateBusiness> for DbActor {
         let sub_log = msg.logger.new(o!("handle" => "create_businesses"));
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
         let business = diesel::insert_into(businesses)
-            .values(new_user)
+            .values(new_business)
             .get_result::<Business>(&mut conn)?;
 
         Ok(business)
@@ -80,12 +80,12 @@ impl Handler<AuthorizeBusiness> for DbActor {
                 .expect("JWT_SECRET must be set!")
                 .as_bytes(),
         )
-            .unwrap();
+        .unwrap();
 
         let business_name_msg = msg.name;
         let password = msg.password;
 
-        let mut conn = self.0.get().expect("Unable to get a connection");
+        let mut conn = self.0.get()?;
         let business = businesses
             .filter(business_name.eq(business_name_msg))
             .get_result::<Business>(&mut conn)?;
@@ -100,7 +100,9 @@ impl Handler<AuthorizeBusiness> for DbActor {
             .unwrap();
 
         if is_valid {
-            let claims = TokenClaims { id: business.business_id };
+            let claims = TokenClaims {
+                id: business.business_id,
+            };
             let token_str = claims.sign_with_key(&jwt_secret).unwrap();
             Ok(token_str)
         } else {
@@ -117,6 +119,12 @@ impl Handler<ChangeImg> for DbActor {
     type Result = Result<String, AppError>;
 
     fn handle(&mut self, msg: ChangeImg, _: &mut Self::Context) -> Self::Result {
-        todo!()
+        let mut conn = self.0.get()?;
+        diesel::update(businesses)
+            .filter(business_id.eq(msg.business_id))
+            .set(img_url.eq(msg.img_url.clone()))
+            .execute(&mut conn)?;
+
+        Ok(msg.img_url)
     }
 }
