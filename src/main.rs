@@ -57,6 +57,7 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/categories")
                     .service(handlers::category::create)
                     .service(handlers::category::get_categories)
+                    .service(handlers::category::update)
             )
             .service(
                 web::scope("/users")
