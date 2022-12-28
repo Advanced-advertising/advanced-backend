@@ -1,4 +1,4 @@
-use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness};
+use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetAllBusinesses};
 use crate::errors::{AppError, AppErrorType};
 use crate::files::save_files;
 use crate::handlers::log_error;
@@ -11,6 +11,28 @@ use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::o;
 use std::arch::asm;
+use uuid::Uuid;
+
+#[get("/get_all")]
+pub async fn get_all(
+    state: Data<AppState>
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let result = match db
+        .send(GetAllBusinesses {
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "get_all_businesses"));
+    result
+        .map(|user| HttpResponse::Ok().json(user))
+        .map_err(log_error(sub_log))
+}
 
 #[post("/register")]
 pub async fn register(
@@ -111,3 +133,14 @@ pub async fn change_img(
         _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
     }
 }
+
+/*
+#[post("/change_categories")]
+pub async fn change_categories(
+    category_ids: Json<Vec<Uuid>>,
+    state: Data<AppState>
+) -> Result<impl Responder, AppError> {
+    let category_ids = category_ids.into_inner();
+    let db = state.as_ref().db.clone();
+}
+ */

@@ -66,6 +66,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 web::scope("/businesses")
+                    .service(handlers::business::get_all)
                     .service(handlers::business::register)
                     .service(handlers::business::login)
                     .service(

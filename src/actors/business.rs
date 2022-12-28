@@ -1,8 +1,20 @@
+use std::collections::HashMap;
 use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
-use crate::models::business::Business;
-use crate::schema::businesses::dsl::{business_id, business_name, businesses, img_url};
+use crate::models::business::{Business, BusinessAllData};
+use crate::schema::businesses::dsl::{
+    businesses as businesses_table,
+    business_id as business_id_column,
+    business_name as business_name_column,
+    img_url as img_url_column,
+};
+use crate::schema::business_categories::dsl::{
+    business_categories as business_categories_table,
+};
+use crate::schema::categories::dsl::{
+    categories as categories_table,
+};
 use actix::{ActorContext, Handler, Message};
 use argonautica::{Hasher, Verifier};
 use diesel::prelude::*;
@@ -14,6 +26,12 @@ use serde::Deserialize;
 use sha2::Sha256;
 use slog::{crit, error, o, Logger};
 use uuid::Uuid;
+
+#[derive(Message)]
+#[rtype(result = "Result<Vec<Business>, AppError>")]
+pub struct GetAllBusinesses {
+    pub logger: Logger,
+}
 
 #[derive(Message)]
 #[rtype(result = "Result<Business, AppError>")]
@@ -63,7 +81,7 @@ impl Handler<CreateBusiness> for DbActor {
 
         let sub_log = msg.logger.new(o!("handle" => "create_businesses"));
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
-        let business = diesel::insert_into(businesses)
+        let business = diesel::insert_into(businesses_table)
             .values(new_business)
             .get_result::<Business>(&mut conn)?;
 
@@ -86,8 +104,8 @@ impl Handler<AuthorizeBusiness> for DbActor {
         let password = msg.password;
 
         let mut conn = self.0.get()?;
-        let business = businesses
-            .filter(business_name.eq(business_name_msg))
+        let business = businesses_table
+            .filter(business_name_column.eq(business_name_msg))
             .get_result::<Business>(&mut conn)?;
 
         let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set!");
@@ -120,11 +138,24 @@ impl Handler<ChangeImg> for DbActor {
 
     fn handle(&mut self, msg: ChangeImg, _: &mut Self::Context) -> Self::Result {
         let mut conn = self.0.get()?;
-        diesel::update(businesses)
-            .filter(business_id.eq(msg.business_id))
-            .set(img_url.eq(msg.img_url.clone()))
+        diesel::update(businesses_table)
+            .filter(business_id_column.eq(msg.business_id))
+            .set(img_url_column.eq(msg.img_url.clone()))
             .execute(&mut conn)?;
 
         Ok(msg.img_url)
+    }
+}
+
+impl Handler<GetAllBusinesses> for DbActor {
+    type Result = Result<Vec<Business>, AppError>;
+
+    fn handle(&mut self, msg: GetAllBusinesses, _: &mut Self::Context) -> Self::Result {
+        let sub_log = msg.logger.new(o!("handle" => "create_businesses"));
+        let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
+
+        let result = businesses_table.get_results::<Business>(&mut conn)?;
+
+        Ok(result)
     }
 }

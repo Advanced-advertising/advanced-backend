@@ -22,3 +22,14 @@ pub struct BusinessData {
     pub password: String,
     pub working_time: String,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct BusinessAllData {
+    pub business_id: Uuid,
+    pub business_name: String,
+    pub email: String,
+    pub password: String,
+    pub working_time: String,
+    pub img_url: String,
+    pub categories: Vec<Uuid>
+}
