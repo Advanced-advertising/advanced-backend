@@ -1,9 +1,6 @@
-use crate::models::user::User;
-use actix::fut::err;
 use actix::MailboxError;
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use diesel::r2d2::{Error, PoolError};
-use diesel::QueryResult;
 use serde::Serialize;
 use std::fmt;
 

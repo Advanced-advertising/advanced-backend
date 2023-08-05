@@ -4,7 +4,7 @@ use crate::handlers::log_error;
 use crate::models::app_state::AppState;
 use crate::models::category::{Category, CategoryData};
 use actix_web::web::{Data, Json};
-use actix_web::{post, get, HttpResponse, Responder};
+use actix_web::{get, post, HttpResponse, Responder};
 use slog::o;
 
 #[post("/create")]
@@ -59,14 +59,9 @@ pub async fn update(
 }
 
 #[get("/get_all")]
-pub async fn get_categories(
-    state: Data<AppState>,
-) -> Result<impl Responder, AppError> {
+pub async fn get_categories(state: Data<AppState>) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
-    let result = match db
-        .send(GetAllCategories)
-        .await
-    {
+    let result = match db.send(GetAllCategories).await {
         Ok(res) => res,
         Err(err) => return Err(AppError::from_mailbox(err)),
     };
@@ -76,4 +71,3 @@ pub async fn get_categories(
         .map(|categories| HttpResponse::Ok().json(categories))
         .map_err(log_error(sub_log))
 }
-

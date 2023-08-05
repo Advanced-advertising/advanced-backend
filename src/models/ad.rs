@@ -4,11 +4,10 @@ use uuid::Uuid;
 
 use crate::schema::ads;
 
-
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = ads)]
 pub struct Ad {
-    pub ads_id: Uuid,
+    pub ad_id: Uuid,
     pub ad_name: String,
     pub img_url: String,
     pub user_id: Uuid,

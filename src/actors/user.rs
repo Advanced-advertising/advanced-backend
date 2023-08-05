@@ -3,16 +3,15 @@ use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
 use crate::models::user::User;
 use crate::schema::users::dsl::{user_name, users};
-use actix::{ActorContext, Handler, Message};
+use actix::{Handler, Message};
 use argonautica::{Hasher, Verifier};
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Error, Pool, PoolError, PooledConnection};
 use hmac::digest::KeyInit;
 use hmac::Hmac;
 use jwt::SignWithKey;
 use serde::Deserialize;
 use sha2::Sha256;
-use slog::{crit, error, o, Logger};
+use slog::{o, Logger};
 use uuid::Uuid;
 
 #[derive(Message)]

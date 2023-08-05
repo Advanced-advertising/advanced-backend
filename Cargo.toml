@@ -10,7 +10,7 @@ edition = "2021"
 actix = "0.13.0"
 actix-cors = "0.6.4"
 actix-web = "4.2.1"
-actix-multipart = "0.4.0"
+actix-multipart = "0.6.0"
 actix-form-data = "0.6.2"
 futures-util = "0.3.25"
 serde = { version = "1.0.148", features = ["derive"] }
@@ -32,3 +32,6 @@ argonautica = "0.2.0"
 hmac = "0.12.1"
 jwt = "0.16.0"
 sha2 = "0.10.6"
+chrono = "0.4.26"
+[profile.dev]
+opt-level = 2

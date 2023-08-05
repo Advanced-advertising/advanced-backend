@@ -1,5 +1,4 @@
 use crate::actors::db::DbActor;
-use crate::config;
 use crate::db_utils::get_pool;
 use actix::{Addr, SyncArbiter};
 use serde::Deserialize;

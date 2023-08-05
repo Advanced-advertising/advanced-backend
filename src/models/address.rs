@@ -2,11 +2,10 @@ use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::schema::address;
-
+use crate::schema::addresses;
 
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
-#[diesel(table_name = address)]
+#[diesel(table_name = addresses)]
 pub struct Address {
     pub address_id: Uuid,
     pub address_name: String,

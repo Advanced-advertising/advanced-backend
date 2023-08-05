@@ -1,15 +1,7 @@
-use actix_web::{
-    dev::ServiceRequest,
-    error::Error,
-    web::{self, Data},
-    App, HttpMessage, HttpServer,
-};
-use actix_web_httpauth::{
-    extractors::{
-        bearer::{self, BearerAuth},
-        AuthenticationError,
-    },
-    middleware::HttpAuthentication,
+use actix_web::{dev::ServiceRequest, error::Error, HttpMessage};
+use actix_web_httpauth::extractors::{
+    bearer::{self, BearerAuth},
+    AuthenticationError,
 };
 use hmac::digest::KeyInit;
 use hmac::Hmac;

@@ -4,7 +4,6 @@ use uuid::Uuid;
 
 use crate::schema::payments;
 
-
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = payments)]
 pub struct Payment {

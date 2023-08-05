@@ -1,5 +1,4 @@
 use diesel::{
-    connection::Connection,
     r2d2::{ConnectionManager, Pool},
     PgConnection,
 };

@@ -1,10 +1,9 @@
 use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::AppError;
 use crate::models::category::Category;
-use crate::schema::categories::dsl::{category_id, category_name, categories};
-use diesel::expression_methods::ExpressionMethods;
-use diesel::query_dsl::QueryDsl;
+use crate::schema::categories::dsl::{categories, category_id, category_name};
 use actix::{Handler, Message};
+use diesel::expression_methods::ExpressionMethods;
 use diesel::RunQueryDsl;
 use slog::{o, Logger};
 use uuid::Uuid;

@@ -12,21 +12,15 @@ mod middleware;
 mod models;
 mod schema;
 
-use crate::actors::db::DbActor;
 use crate::config::Config;
-use crate::db_utils::get_pool;
 use crate::middleware::token::validator;
 use crate::models::app_state::AppState;
-use actix::SyncArbiter;
 use actix_cors::Cors;
-use actix_form_data::{Error, Field, Form};
-use actix_web::web::{get, Data};
-use actix_web::{http, web, App, HttpServer};
+use actix_web::web::{Data};
+use actix_web::{web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
-use futures_util::stream::StreamExt;
-use slog::{debug, info};
-use std::env;
+use slog::info;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -57,7 +51,7 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/categories")
                     .service(handlers::category::create)
                     .service(handlers::category::get_categories)
-                    .service(handlers::category::update)
+                    .service(handlers::category::update),
             )
             .service(
                 web::scope("/users")

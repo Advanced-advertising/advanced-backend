@@ -1,22 +1,13 @@
 use crate::actors::user::{AuthorizeUser, CreateUser};
 use crate::errors::{AppError, AppErrorType};
-use crate::files::save_files;
 use crate::handlers::log_error;
-use crate::middleware::token::TokenClaims;
 use crate::models::app_state::AppState;
-use crate::models::user::{User, UserData};
-use actix_form_data::{Form, Value};
-use actix_multipart;
-use actix_multipart::Multipart;
-use actix_web::web::{Data, Json, ReqData};
-use actix_web::{get, post, web, HttpResponse, Responder};
+use crate::models::user::UserData;
+use actix_web::web::{Data, Json};
+use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
-use futures_util::{StreamExt, TryStreamExt};
-use serde::{Deserialize, Serialize};
-use slog::{error, info, log, o, Logger};
-use std::fmt::Binary;
-use std::fs::File;
-use std::io::Write;
+use futures_util::{StreamExt};
+use slog::o;
 
 #[post("/register")]
 pub async fn register(

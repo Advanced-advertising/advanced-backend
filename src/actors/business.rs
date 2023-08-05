@@ -1,30 +1,20 @@
-use std::collections::HashMap;
 use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
-use crate::models::business::{Business, BusinessAllData};
+use crate::models::business::Business;
 use crate::schema::businesses::dsl::{
-    businesses as businesses_table,
-    business_id as business_id_column,
-    business_name as business_name_column,
-    img_url as img_url_column,
+    business_id as business_id_column, business_name as business_name_column,
+    businesses as businesses_table, img_url as img_url_column,
 };
-use crate::schema::business_categories::dsl::{
-    business_categories as business_categories_table,
-};
-use crate::schema::categories::dsl::{
-    categories as categories_table,
-};
-use actix::{ActorContext, Handler, Message};
+use actix::{Handler, Message};
 use argonautica::{Hasher, Verifier};
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Error, Pool, PoolError, PooledConnection};
 use hmac::digest::KeyInit;
 use hmac::Hmac;
 use jwt::SignWithKey;
 use serde::Deserialize;
 use sha2::Sha256;
-use slog::{crit, error, o, Logger};
+use slog::{o, Logger};
 use uuid::Uuid;
 
 #[derive(Message)]

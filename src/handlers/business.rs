@@ -10,13 +10,9 @@ use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::o;
-use std::arch::asm;
-use uuid::Uuid;
 
 #[get("/get_all")]
-pub async fn get_all(
-    state: Data<AppState>
-) -> Result<impl Responder, AppError> {
+pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
     let result = match db
         .send(GetAllBusinesses {
@@ -99,7 +95,7 @@ pub async fn login(
 
 #[post("/change_img")]
 pub async fn change_img(
-    mut payload: Multipart,
+    payload: Multipart,
     req: Option<ReqData<TokenClaims>>,
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {

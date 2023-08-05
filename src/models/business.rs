@@ -31,5 +31,5 @@ pub struct BusinessAllData {
     pub password: String,
     pub working_time: String,
     pub img_url: String,
-    pub categories: Vec<Uuid>
+    pub categories: Vec<Uuid>,
 }
