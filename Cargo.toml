@@ -33,5 +33,5 @@ hmac = "0.12.1"
 jwt = "0.16.0"
 sha2 = "0.10.6"
 chrono = "0.4.26"
-[profile.dev]
-opt-level = 2
+watch = "0.2.3"
+

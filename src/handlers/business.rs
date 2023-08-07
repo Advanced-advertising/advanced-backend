@@ -2,7 +2,7 @@ use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetA
 use crate::errors::{AppError, AppErrorType};
 use crate::files::save_files;
 use crate::handlers::log_error;
-use crate::middleware::token::TokenClaims;
+use crate::middleware::token::{get_password, TokenClaims};
 use crate::models::app_state::AppState;
 use crate::models::business::BusinessData;
 use actix_multipart::Multipart;
@@ -64,20 +64,11 @@ pub async fn login(
     basic_auth: BasicAuth,
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
-    let password = match basic_auth.password() {
-        Some(pass) => pass,
-        None => {
-            return Err(AppError {
-                message: Some("Must provide username and password".to_string()),
-                cause: None,
-                error_type: AppErrorType::SomethingWentWrong,
-            })
-        }
-    };
+    let password = get_password(basic_auth.clone())?;
 
     let authorise_business = AuthorizeBusiness {
         name: basic_auth.user_id().to_string(),
-        password: password.into(),
+        password,
     };
 
     let db = state.as_ref().db.clone();

@@ -4,6 +4,7 @@ use slog::{error, o, Logger};
 pub mod business;
 pub mod category;
 pub mod user;
+mod ad;
 
 fn log_error(log: Logger) -> impl Fn(AppError) -> AppError {
     move |err| {

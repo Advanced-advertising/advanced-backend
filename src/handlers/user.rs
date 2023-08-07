@@ -8,6 +8,7 @@ use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use futures_util::{StreamExt};
 use slog::o;
+use crate::middleware::token::get_password;
 
 #[post("/register")]
 pub async fn register(
@@ -42,20 +43,11 @@ pub async fn login(
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
-    let password = match basic_auth.password() {
-        Some(pass) => pass,
-        None => {
-            return Err(AppError {
-                message: Some("Must provide username and password".to_string()),
-                cause: None,
-                error_type: AppErrorType::SomethingWentWrong,
-            })
-        }
-    };
+    let password = get_password(basic_auth.clone())?;
 
     let authorise_user = AuthorizeUser {
         name: basic_auth.user_id().to_string(),
-        password: password.into(),
+        password,
     };
 
     let result = match db.send(authorise_user).await {

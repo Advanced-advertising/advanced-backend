@@ -1,7 +1,7 @@
 -- Your SQL goes here
 CREATE TABLE incomes (
     income_id UUID PRIMARY KEY NOT NULL,
-    income TEXT NOT NULL,
+    income NUMERIC(10, 2) NOT NULL,
     business_id UUID NOT NULL,
     order_id UUID NOT NULL,
 

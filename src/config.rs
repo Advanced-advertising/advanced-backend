@@ -26,7 +26,7 @@ impl Config {
 
         Self {
             server: ServerConfig {
-                host: "0.0.0.0".parse().unwrap(),
+                host: "localhost".parse().unwrap(),
                 port: 4000,
             },
             db: db_addr,

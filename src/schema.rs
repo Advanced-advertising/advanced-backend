@@ -10,9 +10,9 @@ diesel::table! {
 diesel::table! {
     ad_orders (order_id) {
         order_id -> Uuid,
-        start_time -> Text,
-        end_time -> Text,
-        price -> Text,
+        start_time -> Timestamptz,
+        end_time -> Timestamptz,
+        price -> Int4,
         is_rejected -> Bool,
         ad_id -> Uuid,
         screen_id -> Uuid,
@@ -23,7 +23,7 @@ diesel::table! {
     addresses (address_id) {
         address_id -> Uuid,
         address_name -> Text,
-        business_id -> Uuid,
+        business_id -> Nullable<Uuid>,
     }
 }
 
@@ -32,6 +32,7 @@ diesel::table! {
         ad_id -> Uuid,
         ad_name -> Text,
         img_url -> Text,
+        statues -> Text,
         user_id -> Uuid,
     }
 }
@@ -49,7 +50,7 @@ diesel::table! {
         business_name -> Text,
         email -> Text,
         password -> Text,
-        working_time -> Text,
+        phone_number -> Text,
         img_url -> Text,
     }
 }
@@ -64,7 +65,7 @@ diesel::table! {
 diesel::table! {
     incomes (income_id) {
         income_id -> Uuid,
-        income -> Text,
+        income -> Numeric,
         business_id -> Uuid,
         order_id -> Uuid,
     }
@@ -73,7 +74,7 @@ diesel::table! {
 diesel::table! {
     payments (payment_id) {
         payment_id -> Uuid,
-        price -> Text,
+        price -> Numeric,
         user_id -> Uuid,
         order_id -> Uuid,
     }
@@ -83,8 +84,9 @@ diesel::table! {
     screens (screen_id) {
         screen_id -> Uuid,
         screen_name -> Text,
-        price_per_time -> Text,
+        price_per_time -> Numeric,
         characteristics -> Text,
+        traffic -> Int4,
         business_id -> Uuid,
         address_id -> Uuid,
     }
@@ -96,6 +98,7 @@ diesel::table! {
         user_name -> Text,
         email -> Text,
         password -> Text,
+        phone_number -> Text,
     }
 }
 

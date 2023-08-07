@@ -3,12 +3,14 @@ use actix_web_httpauth::extractors::{
     bearer::{self, BearerAuth},
     AuthenticationError,
 };
+use actix_web_httpauth::extractors::basic::BasicAuth;
 use hmac::digest::KeyInit;
 use hmac::Hmac;
 use jwt::VerifyWithKey;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use uuid::Uuid;
+use crate::errors::{AppError, AppErrorType};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TokenClaims {
@@ -40,6 +42,19 @@ pub async fn validator(
                 .scope("");
 
             Err((AuthenticationError::from(config).into(), req))
+        }
+    }
+}
+
+pub fn get_password(basic_auth: BasicAuth) -> Result<String, AppError> {
+    match basic_auth.password() {
+        Some(pass) => Ok(pass.to_string()),
+        None => {
+            return Err(AppError {
+                message: Some("Must provide username and password".to_string()),
+                cause: None,
+                error_type: AppErrorType::PasswordOrLoginError,
+            })
         }
     }
 }

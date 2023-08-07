@@ -10,6 +10,7 @@ pub enum AppErrorType {
     NotFoundError,
     ConfigError,
     SomethingWentWrong,
+    PasswordOrLoginError,
 }
 
 #[derive(Debug)]
@@ -92,6 +93,7 @@ impl ResponseError for AppError {
             | AppErrorType::ConfigError
             | AppErrorType::SomethingWentWrong => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
+            AppErrorType::PasswordOrLoginError => StatusCode::BAD_REQUEST,
         }
     }
     fn error_response(&self) -> HttpResponse {
