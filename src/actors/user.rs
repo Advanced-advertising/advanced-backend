@@ -2,7 +2,7 @@ use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::{AppError, AppErrorType};
 use crate::middleware::token::TokenClaims;
 use crate::models::user::User;
-use crate::schema::users::dsl::{user_name, users};
+use crate::schema::users::dsl::{img_url, user_id, user_name, users};
 use actix::{Handler, Message};
 use argonautica::{Hasher, Verifier};
 use diesel::prelude::*;
@@ -30,6 +30,13 @@ pub struct CreateUser {
 pub struct AuthorizeUser {
     pub name: String,
     pub password: String,
+}
+
+#[derive(Message, Deserialize)]
+#[rtype(result = "Result<String, AppError>")]
+pub struct ChangeImg {
+    pub user_id: Uuid,
+    pub img_url: String,
 }
 
 impl Handler<CreateUser> for DbActor {
@@ -102,5 +109,19 @@ impl Handler<AuthorizeUser> for DbActor {
                 error_type: AppErrorType::SomethingWentWrong,
             })
         }
+    }
+}
+
+impl Handler<ChangeImg> for DbActor {
+    type Result = Result<String, AppError>;
+
+    fn handle(&mut self, msg: ChangeImg, _: &mut Self::Context) -> Self::Result {
+        let mut conn = self.0.get()?;
+        diesel::update(users)
+            .filter(user_id.eq(msg.user_id))
+            .set(img_url.eq(msg.img_url.clone()))
+            .execute(&mut conn)?;
+
+        Ok(msg.img_url)
     }
 }

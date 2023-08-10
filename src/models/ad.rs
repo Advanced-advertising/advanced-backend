@@ -22,5 +22,4 @@ pub struct AdData {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum AdStatus {
-}
+pub enum AdStatus {}

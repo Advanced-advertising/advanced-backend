@@ -1,5 +1,5 @@
 use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetAllBusinesses};
-use crate::errors::{AppError};
+use crate::errors::AppError;
 use crate::files::save_files;
 use crate::handlers::log_error;
 use crate::middleware::token::{get_password, TokenClaims};
@@ -55,7 +55,7 @@ pub async fn register(
 
     let sub_log = state.logger.new(o!("handle" => "create_business"));
     result
-        .map(|user| HttpResponse::Ok().json(user))
+        .map(|business| HttpResponse::Ok().json(business))
         .map_err(log_error(sub_log))
 }
 
@@ -104,8 +104,8 @@ pub async fn change_img(
                 business_id: business.id,
                 img_url,
             };
-            let db = state.as_ref().db.clone();
 
+            let db = state.as_ref().db.clone();
             let result = match db.send(change_img).await {
                 Ok(res) => res,
                 Err(err) => return Err(AppError::from_mailbox(err)),
@@ -114,7 +114,7 @@ pub async fn change_img(
             let sub_log = state.logger.new(o!("handle" => "change img for business"));
 
             result
-                .map(|business| HttpResponse::Ok().json(business))
+                .map(|img_url| HttpResponse::Ok().json(img_url))
                 .map_err(log_error(sub_log))
         }
         _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),

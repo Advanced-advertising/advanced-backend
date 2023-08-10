@@ -1,3 +1,4 @@
+use crate::errors::AppErrorType::AuthorizeError;
 use actix::MailboxError;
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use diesel::r2d2::{Error, PoolError};
@@ -11,6 +12,7 @@ pub enum AppErrorType {
     ConfigError,
     SomethingWentWrong,
     PasswordOrLoginError,
+    AuthorizeError,
 }
 
 #[derive(Debug)]
@@ -75,6 +77,16 @@ impl From<diesel::result::Error> for AppError {
     }
 }
 
+impl From<argonautica::Error> for AppError {
+    fn from(error: argonautica::Error) -> Self {
+        AppError {
+            message: None,
+            cause: Some(error.to_string()),
+            error_type: AuthorizeError,
+        }
+    }
+}
+
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{:?}", self)
@@ -94,6 +106,7 @@ impl ResponseError for AppError {
             | AppErrorType::SomethingWentWrong => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
             AppErrorType::PasswordOrLoginError => StatusCode::BAD_REQUEST,
+            AuthorizeError => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
     fn error_response(&self) -> HttpResponse {

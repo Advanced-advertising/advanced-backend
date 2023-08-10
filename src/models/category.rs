@@ -2,7 +2,7 @@ use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::schema::{business_categories, categories, ad_categories};
+use crate::schema::{ad_categories, business_categories, categories};
 
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = categories)]

@@ -16,7 +16,7 @@ use crate::config::Config;
 use crate::middleware::token::validator;
 use crate::models::app_state::AppState;
 use actix_cors::Cors;
-use actix_web::web::{Data};
+use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
@@ -56,7 +56,12 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/users")
                     .service(handlers::user::register)
-                    .service(handlers::user::login),
+                    .service(handlers::user::login)
+                    .service(
+                        web::scope("")
+                            .wrap(bearer_middleware.clone())
+                            .service(handlers::user::change_img),
+                    ),
             )
             .service(
                 web::scope("/businesses")

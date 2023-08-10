@@ -1,5 +1,5 @@
-use diesel::{Insertable, Queryable};
 use diesel::data_types::{PgNumeric, PgTimestamp};
+use diesel::{Insertable, Queryable};
 use uuid::Uuid;
 
 use crate::schema::ad_orders;

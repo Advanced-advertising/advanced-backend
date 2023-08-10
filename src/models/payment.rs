@@ -1,5 +1,5 @@
-use diesel::{Insertable, Queryable};
 use diesel::data_types::PgNumeric;
+use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

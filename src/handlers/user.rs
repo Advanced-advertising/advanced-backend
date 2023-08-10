@@ -1,13 +1,16 @@
+use crate::actors::user::ChangeImg;
 use crate::actors::user::{AuthorizeUser, CreateUser};
-use crate::errors::{AppError};
+use crate::errors::AppError;
+use crate::files::save_files;
 use crate::handlers::log_error;
+use crate::middleware::token::{get_password, TokenClaims};
 use crate::models::app_state::AppState;
 use crate::models::user::UserData;
-use actix_web::web::{Data, Json};
+use actix_multipart::Multipart;
+use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::o;
-use crate::middleware::token::get_password;
 
 #[post("/register")]
 pub async fn register(
@@ -61,4 +64,41 @@ pub async fn login(
     result
         .map(|token_str| HttpResponse::Ok().json(token_str))
         .map_err(log_error(sub_log))
+}
+
+#[post("/change_img")]
+pub async fn change_img(
+    payload: Multipart,
+    req: Option<ReqData<TokenClaims>>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    match req {
+        Some(user) => {
+            let img_url = match save_files(payload).await {
+                Ok(paths) => match paths.get(0) {
+                    None => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
+                    Some(path) => path.clone(),
+                },
+                _ => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
+            };
+
+            let change_img = ChangeImg {
+                user_id: user.id,
+                img_url,
+            };
+
+            let db = state.as_ref().db.clone();
+            let result = match db.send(change_img).await {
+                Ok(res) => res,
+                Err(err) => return Err(AppError::from_mailbox(err)),
+            };
+
+            let sub_log = state.logger.new(o!("handle" => "change img for business"));
+
+            result
+                .map(|img_url| HttpResponse::Ok().json(img_url))
+                .map_err(log_error(sub_log))
+        }
+        _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
+    }
 }

@@ -104,8 +104,7 @@ impl Handler<AuthorizeBusiness> for DbActor {
             .with_hash(business.password)
             .with_password(password)
             .with_secret_key(hash_secret)
-            .verify()
-            .unwrap();
+            .verify()?;
 
         if is_valid {
             let claims = TokenClaims {

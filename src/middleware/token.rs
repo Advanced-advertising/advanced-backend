@@ -1,16 +1,16 @@
+use crate::errors::{AppError, AppErrorType};
 use actix_web::{dev::ServiceRequest, error::Error, HttpMessage};
+use actix_web_httpauth::extractors::basic::BasicAuth;
 use actix_web_httpauth::extractors::{
     bearer::{self, BearerAuth},
     AuthenticationError,
 };
-use actix_web_httpauth::extractors::basic::BasicAuth;
 use hmac::digest::KeyInit;
 use hmac::Hmac;
 use jwt::VerifyWithKey;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use uuid::Uuid;
-use crate::errors::{AppError, AppErrorType};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TokenClaims {

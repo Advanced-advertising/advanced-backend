@@ -18,7 +18,6 @@ pub struct Business {
 #[derive(Serialize, Deserialize)]
 pub struct BusinessData {
     pub business_name: String,
-    pub img_url: String,
     pub phone_number: String,
     pub email: String,
     pub password: String,
