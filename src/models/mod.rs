@@ -7,3 +7,4 @@ pub mod income;
 pub mod payment;
 pub mod screen;
 pub mod user;
+pub mod ad_order;

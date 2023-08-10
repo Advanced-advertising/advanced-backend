@@ -12,7 +12,7 @@ diesel::table! {
         order_id -> Uuid,
         start_time -> Timestamptz,
         end_time -> Timestamptz,
-        price -> Int4,
+        price -> Numeric,
         is_rejected -> Bool,
         ad_id -> Uuid,
         screen_id -> Uuid,
@@ -32,7 +32,7 @@ diesel::table! {
         ad_id -> Uuid,
         ad_name -> Text,
         img_url -> Text,
-        statues -> Text,
+        status -> Text,
         user_id -> Uuid,
     }
 }
@@ -96,6 +96,7 @@ diesel::table! {
     users (user_id) {
         user_id -> Uuid,
         user_name -> Text,
+        img_url -> Text,
         email -> Text,
         password -> Text,
         phone_number -> Text,

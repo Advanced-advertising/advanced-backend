@@ -10,6 +10,7 @@ pub struct Ad {
     pub ad_id: Uuid,
     pub ad_name: String,
     pub img_url: String,
+    pub status: String,
     pub user_id: Uuid,
 }
 
@@ -18,4 +19,8 @@ pub struct AdData {
     pub ad_name: String,
     pub img_url: String,
     pub user_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum AdStatus {
 }

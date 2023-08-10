@@ -29,8 +29,8 @@ pub struct CreateBusiness {
     pub name: String,
     pub password: String,
     pub email: String,
-    pub working_time: String,
     pub img_url: String,
+    pub phone_number: String,
     pub logger: Logger,
 }
 
@@ -65,8 +65,8 @@ impl Handler<CreateBusiness> for DbActor {
             business_name: msg.name,
             email: msg.email,
             password: password_hash,
-            working_time: msg.working_time,
             img_url: msg.img_url,
+            phone_number: msg.phone_number,
         };
 
         let sub_log = msg.logger.new(o!("handle" => "create_businesses"));

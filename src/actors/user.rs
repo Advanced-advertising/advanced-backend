@@ -20,6 +20,8 @@ pub struct CreateUser {
     pub name: String,
     pub email: String,
     pub password: String,
+    pub img_url: String,
+    pub phone_number: String,
     pub logger: Logger,
 }
 
@@ -45,8 +47,10 @@ impl Handler<CreateUser> for DbActor {
         let new_user = User {
             user_id: Uuid::new_v4(),
             user_name: msg.name,
+            img_url: msg.img_url,
             email: msg.email,
             password: password_hash,
+            phone_number: msg.phone_number,
         };
 
         let sub_log = msg.logger.new(o!("handle" => "create_user"));

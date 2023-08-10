@@ -4,32 +4,31 @@ use uuid::Uuid;
 
 use crate::schema::businesses;
 
-#[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
+#[derive(Debug, Clone, Queryable, Insertable, Serialize)]
 #[diesel(table_name = businesses)]
 pub struct Business {
     pub business_id: Uuid,
     pub business_name: String,
+    pub img_url: String,
+    pub phone_number: String,
     pub email: String,
     pub password: String,
-    pub working_time: String,
-    pub img_url: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BusinessData {
     pub business_name: String,
+    pub img_url: String,
+    pub phone_number: String,
     pub email: String,
     pub password: String,
-    pub working_time: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BusinessAllData {
     pub business_id: Uuid,
     pub business_name: String,
+    pub phone_number: String,
     pub email: String,
-    pub password: String,
-    pub working_time: String,
-    pub img_url: String,
-    pub categories: Vec<Uuid>,
+    pub categories: Option<Vec<Uuid>>,
 }

@@ -3,7 +3,7 @@ CREATE TABLE ad_orders (
                            order_id UUID PRIMARY KEY NOT NULL,
                            start_time TIMESTAMPTZ NOT NULL,
                            end_time TIMESTAMPTZ NOT NULL,
-                           price INTEGER NOT NULL,
+                           price NUMERIC(2, 10) NOT NULL,
                            is_rejected BOOL NOT NULL,
                            ad_id UUID NOT NULL,
                            screen_id UUID NOT NULL,

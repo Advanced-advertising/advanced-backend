@@ -1,5 +1,5 @@
 use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetAllBusinesses};
-use crate::errors::{AppError, AppErrorType};
+use crate::errors::{AppError};
 use crate::files::save_files;
 use crate::handlers::log_error;
 use crate::middleware::token::{get_password, TokenClaims};
@@ -42,8 +42,8 @@ pub async fn register(
         .send(CreateBusiness {
             name: business.business_name,
             email: business.email,
-            working_time: business.working_time,
             password: business.password,
+            phone_number: business.phone_number,
             logger: state.logger.clone(),
             img_url: "".to_string(),
         })

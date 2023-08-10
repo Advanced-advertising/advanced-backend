@@ -1,14 +1,15 @@
 use diesel::{Insertable, Queryable};
+use diesel::data_types::PgNumeric;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::schema::payments;
 
-#[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
+#[derive(Debug, Clone, Queryable, Insertable)]
 #[diesel(table_name = payments)]
 pub struct Payment {
     pub payment_id: Uuid,
-    pub price: String,
+    pub price: PgNumeric,
     pub user_id: Uuid,
     pub order_id: Uuid,
 }
