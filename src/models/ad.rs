@@ -22,4 +22,23 @@ pub struct AdData {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum AdStatus {}
+pub struct AdDataUpdate {
+    pub ad_id: Uuid,
+    pub ad_name: String,
+    pub img_url: String,
+    pub status: AdStatus,
+    pub user_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum AdStatus {
+    Unverified,
+}
+
+impl ToString for AdStatus {
+    fn to_string(&self) -> String {
+        match self {
+            AdStatus::Unverified => "Unverified".to_string(),
+        }
+    }
+}

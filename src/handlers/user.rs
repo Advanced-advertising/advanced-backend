@@ -1,7 +1,7 @@
 use crate::actors::user::ChangeImg;
 use crate::actors::user::{AuthorizeUser, CreateUser};
 use crate::errors::AppError;
-use crate::files::save_files;
+use crate::handlers::images::save_files;
 use crate::handlers::log_error;
 use crate::middleware::token::{get_password, TokenClaims};
 use crate::models::app_state::AppState;
@@ -74,13 +74,7 @@ pub async fn change_img(
 ) -> Result<impl Responder, AppError> {
     match req {
         Some(user) => {
-            let img_url = match save_files(payload).await {
-                Ok(paths) => match paths.get(0) {
-                    None => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
-                    Some(path) => path.clone(),
-                },
-                _ => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
-            };
+            let img_url = save_files(payload).await?;
 
             let change_img = ChangeImg {
                 user_id: user.id,

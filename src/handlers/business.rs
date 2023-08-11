@@ -1,6 +1,6 @@
 use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetAllBusinesses};
 use crate::errors::AppError;
-use crate::files::save_files;
+use crate::handlers::images::save_files;
 use crate::handlers::log_error;
 use crate::middleware::token::{get_password, TokenClaims};
 use crate::models::app_state::AppState;
@@ -9,7 +9,7 @@ use actix_multipart::Multipart;
 use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
-use slog::o;
+use slog::{info, o};
 
 #[get("/get_all")]
 pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> {
@@ -66,10 +66,10 @@ pub async fn login(
 ) -> Result<impl Responder, AppError> {
     let password = get_password(basic_auth.clone())?;
 
-    let authorise_business = AuthorizeBusiness {
-        name: basic_auth.user_id().to_string(),
-        password,
-    };
+    let name = basic_auth.user_id().to_string();
+    info!(state.logger, "Name: {:?}", name.clone());
+
+    let authorise_business = AuthorizeBusiness { name, password };
 
     let db = state.as_ref().db.clone();
     let result = match db.send(authorise_business).await {
@@ -92,13 +92,7 @@ pub async fn change_img(
 ) -> Result<impl Responder, AppError> {
     match req {
         Some(business) => {
-            let img_url = match save_files(payload).await {
-                Ok(paths) => match paths.get(0) {
-                    None => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
-                    Some(path) => path.clone(),
-                },
-                _ => return Ok(HttpResponse::BadRequest().body("failed to upload file")),
-            };
+            let img_url = save_files(payload).await?;
 
             let change_img = ChangeImg {
                 business_id: business.id,

@@ -9,10 +9,10 @@ use crate::schema::businesses;
 pub struct Business {
     pub business_id: Uuid,
     pub business_name: String,
-    pub img_url: String,
-    pub phone_number: String,
     pub email: String,
     pub password: String,
+    pub phone_number: String,
+    pub img_url: String,
 }
 
 #[derive(Serialize, Deserialize)]

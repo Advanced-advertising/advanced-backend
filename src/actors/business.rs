@@ -14,7 +14,7 @@ use hmac::Hmac;
 use jwt::SignWithKey;
 use serde::Deserialize;
 use sha2::Sha256;
-use slog::{o, Logger};
+use slog::{info, o, Logger};
 use uuid::Uuid;
 
 #[derive(Message)]
@@ -65,15 +65,27 @@ impl Handler<CreateBusiness> for DbActor {
             business_name: msg.name,
             email: msg.email,
             password: password_hash,
-            img_url: msg.img_url,
             phone_number: msg.phone_number,
+            img_url: msg.img_url,
         };
+
+        info!(
+            msg.logger,
+            "{}",
+            format!("Business to save: {:?}", new_business.clone())
+        );
 
         let sub_log = msg.logger.new(o!("handle" => "create_businesses"));
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
         let business = diesel::insert_into(businesses_table)
             .values(new_business)
             .get_result::<Business>(&mut conn)?;
+
+        info!(
+            msg.logger,
+            "{}",
+            format!("Saved business: {:?}", business.clone())
+        );
 
         Ok(business)
     }

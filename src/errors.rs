@@ -1,4 +1,4 @@
-use crate::errors::AppErrorType::AuthorizeError;
+use crate::errors::AppErrorType::{AuthorizeError, IoError};
 use actix::MailboxError;
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use diesel::r2d2::{Error, PoolError};
@@ -9,10 +9,10 @@ use std::fmt;
 pub enum AppErrorType {
     DbError,
     NotFoundError,
-    ConfigError,
     SomethingWentWrong,
     PasswordOrLoginError,
     AuthorizeError,
+    IoError,
 }
 
 #[derive(Debug)]
@@ -87,6 +87,16 @@ impl From<argonautica::Error> for AppError {
     }
 }
 
+impl From<std::io::Error> for AppError {
+    fn from(error: std::io::Error) -> Self {
+        AppError {
+            message: None,
+            cause: Some(error.to_string()),
+            error_type: IoError,
+        }
+    }
+}
+
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{:?}", self)
@@ -101,12 +111,13 @@ pub struct AppErrorResponse {
 impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self.error_type {
-            AppErrorType::DbError
-            | AppErrorType::ConfigError
-            | AppErrorType::SomethingWentWrong => StatusCode::INTERNAL_SERVER_ERROR,
+            AppErrorType::DbError | AppErrorType::SomethingWentWrong => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
             AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
             AppErrorType::PasswordOrLoginError => StatusCode::BAD_REQUEST,
             AuthorizeError => StatusCode::INTERNAL_SERVER_ERROR,
+            IoError => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
     fn error_response(&self) -> HttpResponse {

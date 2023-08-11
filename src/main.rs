@@ -6,7 +6,6 @@ mod actors;
 mod config;
 mod db_utils;
 mod errors;
-mod files;
 mod handlers;
 mod middleware;
 mod models;
@@ -30,7 +29,7 @@ async fn main() -> std::io::Result<()> {
 
     info!(
         logger,
-        "Starting server at https://{}:{}", config.server.host, config.server.port
+        "Starting server at http://{}:{}", config.server.host, config.server.port
     );
 
     HttpServer::new(move || {
@@ -47,6 +46,7 @@ async fn main() -> std::io::Result<()> {
             }))
             .wrap(cors)
             .wrap(actix_web::middleware::Logger::default())
+            .service(web::scope("/images").service(handlers::images::get_image))
             .service(
                 web::scope("/categories")
                     .service(handlers::category::create)
