@@ -1,5 +1,6 @@
 use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::{AppError, AppErrorType};
+use crate::middleware::token::Role::Client;
 use crate::middleware::token::TokenClaims;
 use crate::models::user::User;
 use crate::schema::users::dsl::{img_url, user_id, user_name, users};
@@ -99,7 +100,10 @@ impl Handler<AuthorizeUser> for DbActor {
             .unwrap();
 
         if is_valid {
-            let claims = TokenClaims { id: user.user_id };
+            let claims = TokenClaims {
+                id: user.user_id,
+                roles: vec![Client],
+            };
             let token_str = claims.sign_with_key(&jwt_secret).unwrap();
             Ok(token_str)
         } else {

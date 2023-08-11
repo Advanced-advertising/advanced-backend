@@ -13,7 +13,9 @@ mod schema;
 
 use crate::config::Config;
 use crate::middleware::token::validator;
+use crate::middleware::token::Role::{Business as BusinessRole, Client};
 use crate::models::app_state::AppState;
+use crate::models::business::Business;
 use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
@@ -46,7 +48,12 @@ async fn main() -> std::io::Result<()> {
             }))
             .wrap(cors)
             .wrap(actix_web::middleware::Logger::default())
-            .service(web::scope("/images").service(handlers::images::get_image))
+            .service(
+                web::scope("/images")
+                    .wrap(bearer_middleware.clone())
+                    .app_data(Data::new(vec![BusinessRole]))
+                    .service(handlers::images::get_image),
+            )
             .service(
                 web::scope("/categories")
                     .service(handlers::category::create)
@@ -60,7 +67,8 @@ async fn main() -> std::io::Result<()> {
                     .service(
                         web::scope("")
                             .wrap(bearer_middleware.clone())
-                            .service(handlers::user::change_img),
+                            .service(handlers::user::change_img)
+                            .app_data(Data::new(vec![Client])),
                     ),
             )
             .service(

@@ -1,5 +1,7 @@
 use crate::errors::{AppError, AppErrorType};
 use actix_web::{dev::ServiceRequest, error::Error, HttpMessage};
+use actix_web::middleware::Logger;
+use actix_web::web::Data;
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use actix_web_httpauth::extractors::{
     bearer::{self, BearerAuth},
@@ -12,9 +14,22 @@ use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use uuid::Uuid;
 
+pub struct AuthorizationState {
+    pub required_roles: Vec<Role>,
+    pub logger: Logger,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TokenClaims {
     pub(crate) id: Uuid,
+    pub(crate) roles: Vec<Role>,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+pub enum Role {
+    Admin,
+    Client,
+    Business,
 }
 
 pub async fn validator(
@@ -30,9 +45,20 @@ pub async fn validator(
         .map_err(|_| "Invalid token");
 
     match claims {
-        Ok(value) => {
-            req.extensions_mut().insert(value);
-            Ok(req)
+        Ok(claims) => {
+            req.extensions_mut().insert(claims.clone());
+
+            if check_access(&claims.roles, &req) {
+                Ok(req)
+            } else {
+                let config = req
+                    .app_data::<bearer::Config>()
+                    .cloned()
+                    .unwrap_or_default()
+                    .scope("");
+
+                Err((AuthenticationError::from(config).into(), req))
+            }
         }
         Err(_) => {
             let config = req
@@ -43,6 +69,16 @@ pub async fn validator(
 
             Err((AuthenticationError::from(config).into(), req))
         }
+    }
+}
+
+fn check_access(roles: &[Role], req: &ServiceRequest) -> bool {
+    if let Some(required_roles) = req.app_data::<Data<Vec<Role>>>() {
+        roles
+            .iter()
+            .any(|user_role| required_roles.contains(user_role))
+    } else {
+        true
     }
 }
 

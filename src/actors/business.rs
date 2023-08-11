@@ -1,5 +1,6 @@
 use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::{AppError, AppErrorType};
+use crate::middleware::token::Role::Business as BusinessRole;
 use crate::middleware::token::TokenClaims;
 use crate::models::business::Business;
 use crate::schema::businesses::dsl::{
@@ -121,6 +122,7 @@ impl Handler<AuthorizeBusiness> for DbActor {
         if is_valid {
             let claims = TokenClaims {
                 id: business.business_id,
+                roles: vec![BusinessRole],
             };
             let token_str = claims.sign_with_key(&jwt_secret).unwrap();
             Ok(token_str)
