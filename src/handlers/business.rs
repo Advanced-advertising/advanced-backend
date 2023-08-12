@@ -10,6 +10,8 @@ use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::{o};
+use crate::actors::address::CreateAddress;
+use crate::models::address::AddressData;
 
 #[get("/get_all")]
 pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> {
@@ -104,6 +106,39 @@ pub async fn change_img(
 
             result
                 .map(|img_url| HttpResponse::Ok().json(img_url))
+                .map_err(log_error(sub_log))
+        }
+        _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
+    }
+}
+
+#[post("/add_address")]
+pub async fn add_address(
+    address_data: Json<AddressData>,
+    req: Option<ReqData<TokenClaims>>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    match req {
+        Some(business) => {
+            let db = state.as_ref().db.clone();
+            let address_data = address_data.into_inner();
+
+            let business_id = business.id;
+            let result = match db
+                .send(CreateAddress {
+                    name: address_data.address_name,
+                    business_id,
+                    logger: state.logger.clone(),
+                })
+                .await
+            {
+                Ok(res) => res,
+                Err(err) => return Err(AppError::from_mailbox(err)),
+            };
+
+            let sub_log = state.logger.new(o!("handle" => "add_address"));
+            result
+                .map(|business| HttpResponse::Ok().json(business))
                 .map_err(log_error(sub_log))
         }
         _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
