@@ -1,13 +1,54 @@
 version: "3.4"
 services:
+  actix_api_test:
+    container_name: "actix_api_test"
+    command: sh -c "cargo watch"
+    build:
+      context: .
+      cache_from:
+        - rust:latest
+    links:
+      - "postgres"
+    depends_on:
+      - "postgres"
+    env_file:
+      - .env
+    networks:
+      - actix_api
+    volumes:
+      - ./:/app
+    tty: true
+    ports:
+      - "4000:4000"
+
+  nginx:
+    build:
+      context: ./nginx
+    volumes:
+      - ./media:/app/media
+    ports:
+      - 80:80
+    networks:
+      - actix_api
+    depends_on:
+      - actix_api_test
+      - postgres
+
   postgres:
     image: postgres:alpine
     volumes:
       - pg_actix:/var/lib/postgresql/data
     env_file:
       - .env-db
+    networks:
+      - actix_api
     ports:
       - "5432:5432"
+
+networks:
+  actix_api:
+    driver: bridge
+
 volumes:
-    pg_actix:
-        driver: local
+  pg_actix:
+    driver: local
