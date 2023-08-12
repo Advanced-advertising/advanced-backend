@@ -28,6 +28,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    admin (admin_id) {
+        admin_id -> Uuid,
+        admin_name -> Text,
+        password -> Text,
+    }
+}
+
+diesel::table! {
     ads (ad_id) {
         ad_id -> Uuid,
         ad_name -> Text,
@@ -122,6 +130,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     ad_categories,
     ad_orders,
     addresses,
+    admin,
     ads,
     business_categories,
     businesses,

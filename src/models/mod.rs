@@ -1,6 +1,7 @@
 pub mod ad;
 pub mod ad_order;
 pub mod address;
+pub mod admin;
 pub mod app_state;
 pub mod business;
 pub mod category;

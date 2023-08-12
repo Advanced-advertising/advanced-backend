@@ -3,7 +3,7 @@ use crate::actors::user::{AuthorizeUser, CreateUser};
 use crate::errors::AppError;
 use crate::handlers::images::save_files;
 use crate::handlers::log_error;
-use crate::middleware::token::{get_password, TokenClaims};
+use crate::middleware::token::TokenClaims;
 use crate::models::app_state::AppState;
 use crate::models::user::UserData;
 use actix_multipart::Multipart;
@@ -47,19 +47,15 @@ pub async fn login(
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
-    let password = get_password(basic_auth.clone())?;
 
-    let authorise_user = AuthorizeUser {
-        name: basic_auth.user_id().to_string(),
-        password,
-    };
+    let authorise_user = AuthorizeUser { basic_auth };
 
     let result = match db.send(authorise_user).await {
         Ok(res) => res,
         Err(err) => return Err(AppError::from_mailbox(err)),
     };
 
-    let sub_log = state.logger.new(o!("handle" => "login"));
+    let sub_log = state.logger.new(o!("handle" => "login client"));
 
     result
         .map(|token_str| HttpResponse::Ok().json(token_str))

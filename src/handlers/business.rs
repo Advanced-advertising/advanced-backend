@@ -2,14 +2,14 @@ use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetA
 use crate::errors::AppError;
 use crate::handlers::images::save_files;
 use crate::handlers::log_error;
-use crate::middleware::token::{get_password, TokenClaims};
+use crate::middleware::token::TokenClaims;
 use crate::models::app_state::AppState;
 use crate::models::business::BusinessData;
 use actix_multipart::Multipart;
 use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
-use slog::{info, o};
+use slog::{o};
 
 #[get("/get_all")]
 pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> {
@@ -64,12 +64,7 @@ pub async fn login(
     basic_auth: BasicAuth,
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
-    let password = get_password(basic_auth.clone())?;
-
-    let name = basic_auth.user_id().to_string();
-    info!(state.logger, "Name: {:?}", name.clone());
-
-    let authorise_business = AuthorizeBusiness { name, password };
+    let authorise_business = AuthorizeBusiness { basic_auth };
 
     let db = state.as_ref().db.clone();
     let result = match db.send(authorise_business).await {

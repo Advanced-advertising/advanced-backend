@@ -1,23 +1,25 @@
 use crate::errors::{AppError, AppErrorType};
-use actix_web::{dev::ServiceRequest, error::Error, HttpMessage};
-use actix_web::middleware::Logger;
 use actix_web::web::Data;
+use actix_web::{dev::ServiceRequest, error::Error, HttpMessage};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use actix_web_httpauth::extractors::{
     bearer::{self, BearerAuth},
     AuthenticationError,
 };
+use argonautica::Verifier;
 use hmac::digest::KeyInit;
 use hmac::Hmac;
-use jwt::VerifyWithKey;
+use jwt::{SignWithKey, VerifyWithKey};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use uuid::Uuid;
 
+/*
 pub struct AuthorizationState {
     pub required_roles: Vec<Role>,
     pub logger: Logger,
 }
+ */
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TokenClaims {
@@ -82,7 +84,43 @@ fn check_access(roles: &[Role], req: &ServiceRequest) -> bool {
     }
 }
 
-pub fn get_password(basic_auth: BasicAuth) -> Result<String, AppError> {
+pub fn authorize(
+    id: Uuid,
+    password: String,
+    roles: Vec<Role>,
+    basic_auth: BasicAuth,
+) -> Result<String, AppError> {
+    let jwt_secret: Hmac<Sha256> = Hmac::new_from_slice(
+        std::env::var("JWT_SECRET")
+            .expect("JWT_SECRET must be set!")
+            .as_bytes(),
+    )
+    .unwrap();
+
+    let verifiable_password = get_password(basic_auth.clone())?;
+
+    let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set!");
+    let mut verifier = Verifier::default();
+    let is_valid = verifier
+        .with_hash(password)
+        .with_password(verifiable_password)
+        .with_secret_key(hash_secret)
+        .verify()?;
+
+    if is_valid {
+        let claims = TokenClaims { id, roles };
+        let token_str = claims.sign_with_key(&jwt_secret).unwrap();
+        Ok(token_str)
+    } else {
+        Err(AppError {
+            message: Some("Cannot authorise".to_string()),
+            cause: None,
+            error_type: AppErrorType::SomethingWentWrong,
+        })
+    }
+}
+
+fn get_password(basic_auth: BasicAuth) -> Result<String, AppError> {
     match basic_auth.password() {
         Some(pass) => Ok(pass.to_string()),
         None => {

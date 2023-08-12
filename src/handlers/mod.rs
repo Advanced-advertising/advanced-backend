@@ -4,6 +4,7 @@ use std::io;
 
 pub mod ad;
 pub mod ad_order;
+pub mod admin;
 pub mod business;
 pub mod category;
 pub mod images;

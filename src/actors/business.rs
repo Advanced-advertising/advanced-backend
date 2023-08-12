@@ -1,20 +1,17 @@
 use crate::actors::db::{get_pooled_connection, DbActor};
-use crate::errors::{AppError, AppErrorType};
+use crate::errors::AppError;
+use crate::middleware::token::authorize;
 use crate::middleware::token::Role::Business as BusinessRole;
-use crate::middleware::token::TokenClaims;
 use crate::models::business::Business;
 use crate::schema::businesses::dsl::{
     business_id as business_id_column, business_name as business_name_column,
     businesses as businesses_table, img_url as img_url_column,
 };
 use actix::{Handler, Message};
-use argonautica::{Hasher, Verifier};
+use actix_web_httpauth::extractors::basic::BasicAuth;
+use argonautica::Hasher;
 use diesel::prelude::*;
-use hmac::digest::KeyInit;
-use hmac::Hmac;
-use jwt::SignWithKey;
 use serde::Deserialize;
-use sha2::Sha256;
 use slog::{info, o, Logger};
 use uuid::Uuid;
 
@@ -35,11 +32,10 @@ pub struct CreateBusiness {
     pub logger: Logger,
 }
 
-#[derive(Message, Deserialize)]
+#[derive(Message)]
 #[rtype(result = "Result<String, AppError>")]
 pub struct AuthorizeBusiness {
-    pub name: String,
-    pub password: String,
+    pub(crate) basic_auth: BasicAuth,
 }
 
 #[derive(Message, Deserialize)]
@@ -96,43 +92,19 @@ impl Handler<AuthorizeBusiness> for DbActor {
     type Result = Result<String, AppError>;
 
     fn handle(&mut self, msg: AuthorizeBusiness, _: &mut Self::Context) -> Self::Result {
-        let jwt_secret: Hmac<Sha256> = Hmac::new_from_slice(
-            std::env::var("JWT_SECRET")
-                .expect("JWT_SECRET must be set!")
-                .as_bytes(),
-        )
-        .unwrap();
-
-        let business_name_msg = msg.name;
-        let password = msg.password;
+        let business_name_msg = msg.basic_auth.user_id().to_string();
 
         let mut conn = self.0.get()?;
         let business = businesses_table
             .filter(business_name_column.eq(business_name_msg))
             .get_result::<Business>(&mut conn)?;
 
-        let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set!");
-        let mut verifier = Verifier::default();
-        let is_valid = verifier
-            .with_hash(business.password)
-            .with_password(password)
-            .with_secret_key(hash_secret)
-            .verify()?;
-
-        if is_valid {
-            let claims = TokenClaims {
-                id: business.business_id,
-                roles: vec![BusinessRole],
-            };
-            let token_str = claims.sign_with_key(&jwt_secret).unwrap();
-            Ok(token_str)
-        } else {
-            Err(AppError {
-                message: Some("Cannot authorise business".to_string()),
-                cause: None,
-                error_type: AppErrorType::SomethingWentWrong,
-            })
-        }
+        authorize(
+            business.business_id,
+            business.password,
+            vec![BusinessRole],
+            msg.basic_auth,
+        )
     }
 }
 

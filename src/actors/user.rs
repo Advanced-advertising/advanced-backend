@@ -1,17 +1,14 @@
 use crate::actors::db::{get_pooled_connection, DbActor};
-use crate::errors::{AppError, AppErrorType};
+use crate::errors::AppError;
+use crate::middleware::token::authorize;
 use crate::middleware::token::Role::Client;
-use crate::middleware::token::TokenClaims;
 use crate::models::user::User;
 use crate::schema::users::dsl::{img_url, user_id, user_name, users};
 use actix::{Handler, Message};
-use argonautica::{Hasher, Verifier};
+use actix_web_httpauth::extractors::basic::BasicAuth;
+use argonautica::Hasher;
 use diesel::prelude::*;
-use hmac::digest::KeyInit;
-use hmac::Hmac;
-use jwt::SignWithKey;
 use serde::Deserialize;
-use sha2::Sha256;
 use slog::{o, Logger};
 use uuid::Uuid;
 
@@ -26,11 +23,10 @@ pub struct CreateUser {
     pub logger: Logger,
 }
 
-#[derive(Message, Deserialize)]
+#[derive(Message)]
 #[rtype(result = "Result<String, AppError>")]
 pub struct AuthorizeUser {
-    pub name: String,
-    pub password: String,
+    pub basic_auth: BasicAuth,
 }
 
 #[derive(Message, Deserialize)]
@@ -75,14 +71,7 @@ impl Handler<AuthorizeUser> for DbActor {
     type Result = Result<String, AppError>;
 
     fn handle(&mut self, msg: AuthorizeUser, _: &mut Self::Context) -> Self::Result {
-        let jwt_secret: Hmac<Sha256> = Hmac::new_from_slice(
-            std::env::var("JWT_SECRET")
-                .expect("JWT_SECRET must be set!")
-                .as_bytes(),
-        )
-        .unwrap();
-        let username = msg.name;
-        let password = msg.password;
+        let username = msg.basic_auth.user_id().to_string();
 
         let mut conn = self.0.get()?;
 
@@ -90,29 +79,7 @@ impl Handler<AuthorizeUser> for DbActor {
             .filter(user_name.eq(username))
             .get_result::<User>(&mut conn)?;
 
-        let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set!");
-        let mut verifier = Verifier::default();
-        let is_valid = verifier
-            .with_hash(user.password)
-            .with_password(password)
-            .with_secret_key(hash_secret)
-            .verify()
-            .unwrap();
-
-        if is_valid {
-            let claims = TokenClaims {
-                id: user.user_id,
-                roles: vec![Client],
-            };
-            let token_str = claims.sign_with_key(&jwt_secret).unwrap();
-            Ok(token_str)
-        } else {
-            Err(AppError {
-                message: Some("Cannot authorise user".to_string()),
-                cause: None,
-                error_type: AppErrorType::SomethingWentWrong,
-            })
-        }
+        authorize(user.user_id, user.password, vec![Client], msg.basic_auth)
     }
 }
 
