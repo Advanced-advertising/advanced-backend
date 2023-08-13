@@ -1,7 +1,8 @@
 use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::AppError;
 use crate::middleware::token::authorize;
-use crate::middleware::token::Role::{Admin as AdminRole};
+use crate::middleware::token::Role::Admin as AdminRole;
+use crate::models::admin::Admin;
 use crate::schema::admin::dsl::{admin as admin_table, admin_name as admin_name_column};
 use actix::{Handler, Message};
 use actix_web_httpauth::extractors::basic::BasicAuth;
@@ -10,7 +11,6 @@ use diesel::prelude::*;
 use serde::Deserialize;
 use slog::{o, Logger};
 use uuid::Uuid;
-use crate::models::admin::Admin;
 
 #[derive(Message)]
 #[rtype(result = "Result<Admin, AppError>")]
@@ -73,6 +73,11 @@ impl Handler<AuthorizeAdmin> for DbActor {
             .filter(admin_name_column.eq(admin_name))
             .get_result::<Admin>(&mut conn)?;
 
-        authorize(admin.admin_id, admin.password, vec![AdminRole], msg.basic_auth)
+        authorize(
+            admin.admin_id,
+            admin.password,
+            vec![AdminRole],
+            msg.basic_auth,
+        )
     }
 }

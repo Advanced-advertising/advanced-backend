@@ -1,4 +1,4 @@
-use diesel::data_types::{PgNumeric, PgTimestamp};
+use diesel::data_types::{PgTimestamp};
 use diesel::{Insertable, Queryable};
 use uuid::Uuid;
 
@@ -10,7 +10,7 @@ pub struct AdOrder {
     pub order_id: Uuid,
     pub start_time: PgTimestamp,
     pub end_time: PgTimestamp,
-    pub price: PgNumeric,
+    pub price: f64,
     pub is_rejected: bool,
     pub ad_id: Uuid,
     pub screen_id: Uuid,

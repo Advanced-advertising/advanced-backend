@@ -1,12 +1,12 @@
 use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::AppError;
-use crate::schema::addresses::dsl::{addresses, address_name, address_id};
+use crate::models::address::Address;
+use crate::schema::addresses::dsl::{address_id, address_name, addresses};
 use actix::{Handler, Message};
 use diesel::expression_methods::ExpressionMethods;
 use diesel::RunQueryDsl;
 use slog::{o, Logger};
 use uuid::Uuid;
-use crate::models::address::Address;
 
 #[derive(Message)]
 #[rtype(result = "Result<Address, AppError>")]

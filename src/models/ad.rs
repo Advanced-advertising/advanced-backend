@@ -26,7 +26,6 @@ pub struct AdDataUpdate {
     pub ad_id: Uuid,
     pub ad_name: String,
     pub img_url: String,
-    pub status: AdStatus,
     pub user_id: Uuid,
 }
 

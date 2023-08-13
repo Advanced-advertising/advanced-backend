@@ -50,6 +50,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::scope("/images").service(handlers::images::get_image))
             .service(
                 web::scope("/categories")
+                    .wrap(bearer_middleware.clone())
                     .service(handlers::category::create)
                     .service(handlers::category::get_categories)
                     .service(handlers::category::update),
@@ -64,6 +65,18 @@ async fn main() -> std::io::Result<()> {
                             .app_data(Data::new(vec![Client]))
                             .service(handlers::user::change_img),
                     ),
+            )
+            .service(
+            web::scope("/ad")
+                .wrap(bearer_middleware.clone())
+                .service(handlers::ad::create)
+                .service(handlers::ad::get_ads)
+                .service(handlers::ad::update),
+        )
+            .service(
+                web::scope("/screens")
+                    .wrap(bearer_middleware.clone())
+                    .service(handlers::screen::get_all)
             )
             .service(
                 web::scope("/businesses")

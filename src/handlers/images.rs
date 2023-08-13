@@ -2,7 +2,7 @@ use crate::errors::AppError;
 use crate::handlers::log_io_error;
 use crate::models::app_state::AppState;
 use actix_multipart::Multipart;
-use actix_web::web::{Data};
+use actix_web::web::Data;
 use actix_web::{get, web, HttpResponse};
 use futures_util::{StreamExt, TryStreamExt};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -12,10 +12,7 @@ use std::path::Path;
 use uuid::Uuid;
 
 #[get("")]
-async fn get_image(
-    img_url: String,
-    state: Data<AppState>,
-) -> Result<HttpResponse, AppError> {
+async fn get_image(img_url: String, state: Data<AppState>) -> Result<HttpResponse, AppError> {
     if !Path::new(&img_url).exists() {
         info!(state.logger, "NO");
         info!(state.logger, "{}", img_url.to_string());

@@ -55,7 +55,6 @@ pub async fn update(
             ad_name: ad.ad_name,
             img_url: ad.img_url,
             user_id: ad.user_id,
-            status: ad.status,
             logger: state.logger.clone(),
         })
         .await
@@ -71,7 +70,7 @@ pub async fn update(
 }
 
 #[get("/get_all")]
-pub async fn get_categories(state: Data<AppState>) -> Result<impl Responder, AppError> {
+pub async fn get_ads(state: Data<AppState>) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
     let result = match db.send(GetAllAds).await {
         Ok(res) => res,

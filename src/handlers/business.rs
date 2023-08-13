@@ -1,17 +1,17 @@
+use crate::actors::address::CreateAddress;
 use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetAllBusinesses};
 use crate::errors::AppError;
 use crate::handlers::images::save_files;
 use crate::handlers::log_error;
 use crate::middleware::token::TokenClaims;
+use crate::models::address::AddressData;
 use crate::models::app_state::AppState;
 use crate::models::business::BusinessData;
 use actix_multipart::Multipart;
 use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
-use slog::{o};
-use crate::actors::address::CreateAddress;
-use crate::models::address::AddressData;
+use slog::o;
 
 #[get("/get_all")]
 pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> {
@@ -144,14 +144,3 @@ pub async fn add_address(
         _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
     }
 }
-
-/*
-#[post("/change_categories")]
-pub async fn change_categories(
-    category_ids: Json<Vec<Uuid>>,
-    state: Data<AppState>
-) -> Result<impl Responder, AppError> {
-    let category_ids = category_ids.into_inner();
-    let db = state.as_ref().db.clone();
-}
- */

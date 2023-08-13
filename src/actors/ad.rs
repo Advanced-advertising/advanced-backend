@@ -2,7 +2,7 @@ use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::AppError;
 use crate::models::ad::{Ad, AdStatus};
 use crate::schema::ads::dsl::ads;
-use crate::schema::ads::{ad_id, ad_name, img_url, status, user_id};
+use crate::schema::ads::{ad_id, ad_name, img_url, user_id};
 use actix::{Handler, Message};
 use diesel::expression_methods::ExpressionMethods;
 use diesel::RunQueryDsl;
@@ -25,7 +25,6 @@ pub struct UpdateAd {
     pub ad_name: String,
     pub img_url: String,
     pub user_id: Uuid,
-    pub status: AdStatus,
     pub logger: Logger,
 }
 
@@ -63,13 +62,11 @@ impl Handler<UpdateAd> for DbActor {
         let sub_log = msg.logger.new(o!("handle" => "update_ad"));
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
 
-        let ad_status = msg.status.to_string();
         let updated_category = diesel::update(ads)
             .filter(ad_id.eq(msg.id))
             .set((
                 ad_name.eq(msg.ad_name),
                 img_url.eq(msg.img_url),
-                status.eq(ad_status),
                 user_id.eq(msg.user_id),
             ))
             .get_result::<Ad>(&mut conn)?;

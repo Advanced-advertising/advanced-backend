@@ -12,7 +12,7 @@ diesel::table! {
         order_id -> Uuid,
         start_time -> Timestamptz,
         end_time -> Timestamptz,
-        price -> Numeric,
+        price -> Float8,
         is_rejected -> Bool,
         ad_id -> Uuid,
         screen_id -> Uuid,
@@ -73,7 +73,7 @@ diesel::table! {
 diesel::table! {
     incomes (income_id) {
         income_id -> Uuid,
-        income -> Numeric,
+        income -> Float8,
         business_id -> Uuid,
         order_id -> Uuid,
     }
@@ -82,7 +82,7 @@ diesel::table! {
 diesel::table! {
     payments (payment_id) {
         payment_id -> Uuid,
-        price -> Numeric,
+        price -> Float8,
         user_id -> Uuid,
         order_id -> Uuid,
     }
@@ -92,7 +92,7 @@ diesel::table! {
     screens (screen_id) {
         screen_id -> Uuid,
         screen_name -> Text,
-        price_per_time -> Numeric,
+        price_per_time -> Float8,
         characteristics -> Text,
         traffic -> Int4,
         business_id -> Uuid,
