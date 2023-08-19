@@ -16,7 +16,7 @@ pub struct Screen {
     pub address_id: Uuid,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Queryable)]
 pub struct ScreenData {
     pub screen_name: String,
     pub price_per_time: f64,
@@ -24,4 +24,15 @@ pub struct ScreenData {
     pub traffic: i32,
     pub business_id: Uuid,
     pub address_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ScreenDataWithAddress {
+    pub screen_id: Uuid,
+    pub screen_name: String,
+    pub price_per_time: f64,
+    pub characteristics: String,
+    pub traffic: i32,
+    pub address_name: String,
+    pub business_id: Uuid,
 }

@@ -13,7 +13,7 @@ mod schema;
 
 use crate::config::Config;
 use crate::middleware::token::validator;
-use crate::middleware::token::Role::{Business as BusinessRole, Client};
+use crate::middleware::token::Role::{Admin, Business as BusinessRole, Client};
 use crate::models::app_state::AppState;
 use actix_cors::Cors;
 use actix_web::web::Data;
@@ -67,30 +67,50 @@ async fn main() -> std::io::Result<()> {
                     ),
             )
             .service(
-            web::scope("/ad")
-                .wrap(bearer_middleware.clone())
-                .service(handlers::ad::create)
-                .service(handlers::ad::get_ads)
-                .service(handlers::ad::update),
-        )
+                web::scope("/ad")
+                    .wrap(bearer_middleware.clone())
+                    .service(handlers::ad::create)
+                    .service(handlers::ad::get_ads)
+                    .service(handlers::ad::update),
+            )
             .service(
                 web::scope("/screens")
                     .wrap(bearer_middleware.clone())
                     .service(handlers::screen::get_all)
+                    .service(handlers::screen::get_screen_data_by_id)
+                    .service(handlers::screen::get_all_business_screens)
+                    .service(handlers::screen::get_all_by_business_id)
+                    .service(handlers::screen::get_all_addresses),
             )
             .service(
                 web::scope("/businesses")
-                    .service(handlers::business::get_all)
                     .service(handlers::business::register)
                     .service(handlers::business::login)
+                    .service(handlers::business::get_all)
+                    .service(handlers::business::get_categories)
+                    .service(handlers::business::get_business_info_by_id)
                     .service(
                         web::scope("")
                             .wrap(bearer_middleware.clone())
-                            .app_data(Data::new(vec![BusinessRole]))
-                            .service(handlers::business::change_img),
+                            .app_data(Data::new(vec![BusinessRole, Admin]))
+                            .service(handlers::business::get_business_info)
+                            .service(handlers::business::change_img)
+                            .service(handlers::business::change_business_info)
+                            .service(handlers::business::get_categories),
                     ),
             )
-            .service(web::scope("/screens").wrap(bearer_middleware))
+            .service(
+                web::scope("/admin")
+                    .service(handlers::admin::register)
+                    .service(handlers::admin::login)
+                    .service(
+                    web::scope("")
+                        .wrap(bearer_middleware)
+                        .app_data(Data::new(vec![Admin]))
+                        .service(handlers::admin::create_screen)
+                        .service(handlers::admin::create_address),
+                ),
+            )
     })
     .bind(format!("{}:{}", config.server.host, config.server.port))?
     .run()

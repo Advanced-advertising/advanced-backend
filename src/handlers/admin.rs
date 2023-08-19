@@ -1,14 +1,16 @@
+use crate::actors::address::CreateAddress;
 use crate::actors::admin::{AuthorizeAdmin, CreateAdmin};
+use crate::actors::screens::CreateScreen;
 use crate::errors::AppError;
 use crate::handlers::log_error;
+use crate::models::address::AddressData;
 use crate::models::app_state::AppState;
+use crate::models::screen::ScreenData;
 use crate::models::user::UserData;
 use actix_web::web::{Data, Json};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::o;
-use crate::actors::screens::CreateScreen;
-use crate::models::screen::ScreenData;
 
 #[post("/create")]
 pub async fn register(
@@ -57,8 +59,35 @@ pub async fn login(
         .map_err(log_error(sub_log))
 }
 
+#[post("/create_address")]
+pub async fn create_address(
+    address_data: Json<AddressData>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let address_data = address_data.into_inner();
+
+    let result = match db
+        .send(CreateAddress {
+            name: address_data.address_name,
+            business_id: address_data.business_id,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "add_address"));
+    result
+        .map(|business| HttpResponse::Ok().json(business))
+        .map_err(log_error(sub_log))
+
+}
+
 #[post("/create_screen")]
-pub async fn add_address(
+pub async fn create_screen(
     screen_data: Json<ScreenData>,
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
@@ -85,5 +114,4 @@ pub async fn add_address(
     result
         .map(|screen| HttpResponse::Ok().json(screen))
         .map_err(log_error(sub_log))
-
 }

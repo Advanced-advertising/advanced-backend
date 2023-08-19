@@ -1,17 +1,19 @@
-use crate::actors::address::CreateAddress;
-use crate::actors::business::{AuthorizeBusiness, ChangeImg, CreateBusiness, GetAllBusinesses};
+use crate::actors::business::{
+    AuthorizeBusiness, ChangeBusinessInfo, ChangeImg, CreateBusiness, GetAllBusinesses,
+    GetBusinessCategories, GetBusinessesInfo,
+};
 use crate::errors::AppError;
 use crate::handlers::images::save_files;
 use crate::handlers::log_error;
 use crate::middleware::token::TokenClaims;
-use crate::models::address::AddressData;
 use crate::models::app_state::AppState;
-use crate::models::business::BusinessData;
+use crate::models::business::{BusinessData, BusinessInfo};
 use actix_multipart::Multipart;
 use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::o;
+use uuid::Uuid;
 
 #[get("/get_all")]
 pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> {
@@ -29,6 +31,58 @@ pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> 
     let sub_log = state.logger.new(o!("handle" => "get_all_businesses"));
     result
         .map(|user| HttpResponse::Ok().json(user))
+        .map_err(log_error(sub_log))
+}
+
+#[post("/get_business_info")]
+pub async fn get_business_info(
+    req: Option<ReqData<TokenClaims>>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    match req {
+        Some(business) => {
+            let db = state.as_ref().db.clone();
+            let result = match db
+                .send(GetBusinessesInfo {
+                    business_id: business.id,
+                    logger: state.logger.clone(),
+                })
+                .await
+            {
+                Ok(res) => res,
+                Err(err) => return Err(AppError::from_mailbox(err)),
+            };
+
+            let sub_log = state.logger.new(o!("handle" => "get_business_info"));
+            result
+                .map(|business_info| HttpResponse::Ok().json(business_info))
+                .map_err(log_error(sub_log))
+        }
+        _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
+    }
+}
+
+#[post("/get_business_info_by_id")]
+pub async fn get_business_info_by_id(
+    business_id: Json<Uuid>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let business_id = business_id.into_inner();
+    let result = match db
+        .send(GetBusinessesInfo {
+            business_id,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "get_business_info_by_id"));
+    result
+        .map(|business_info| HttpResponse::Ok().json(business_info))
         .map_err(log_error(sub_log))
 }
 
@@ -112,35 +166,51 @@ pub async fn change_img(
     }
 }
 
-#[post("/add_address")]
-pub async fn add_address(
-    address_data: Json<AddressData>,
-    req: Option<ReqData<TokenClaims>>,
+#[post("/change_business_info")]
+pub async fn change_business_info(
+    business_info: Json<BusinessInfo>,
     state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
-    match req {
-        Some(business) => {
-            let db = state.as_ref().db.clone();
-            let address_data = address_data.into_inner();
+    let db = state.as_ref().db.clone();
+    let business_info = business_info.into_inner();
 
-            let business_id = business.id;
-            let result = match db
-                .send(CreateAddress {
-                    name: address_data.address_name,
-                    business_id,
-                    logger: state.logger.clone(),
-                })
-                .await
-            {
-                Ok(res) => res,
-                Err(err) => return Err(AppError::from_mailbox(err)),
-            };
+    let result = match db
+        .send(ChangeBusinessInfo {
+            business_info,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
 
-            let sub_log = state.logger.new(o!("handle" => "add_address"));
-            result
-                .map(|business| HttpResponse::Ok().json(business))
-                .map_err(log_error(sub_log))
-        }
-        _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
-    }
+    let sub_log = state.logger.new(o!("handle" => "change_categories"));
+    result
+        .map(|res| HttpResponse::Ok().json(res))
+        .map_err(log_error(sub_log))
+}
+
+#[post("/get_categories")]
+pub async fn get_categories(
+    business_id: Json<Uuid>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let business_id = business_id.into_inner();
+    let result = match db
+        .send(GetBusinessCategories {
+            business_id,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "change_categories"));
+    result
+        .map(|categories| HttpResponse::Ok().json(categories))
+        .map_err(log_error(sub_log))
 }

@@ -1,10 +1,12 @@
-use diesel::{Insertable, Queryable};
+use crate::models::category::Category;
+use crate::models::screen::Screen;
+use diesel::{AsChangeset, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::schema::businesses;
 
-#[derive(Debug, Clone, Queryable, Insertable, Serialize)]
+#[derive(Debug, Clone, Queryable, Insertable, Serialize, Selectable, AsChangeset)]
 #[diesel(table_name = businesses)]
 pub struct Business {
     pub business_id: Uuid,
@@ -23,11 +25,12 @@ pub struct BusinessData {
     pub password: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct BusinessAllData {
+#[derive(Clone, Serialize, Deserialize)]
+pub struct BusinessInfo {
     pub business_id: Uuid,
     pub business_name: String,
     pub phone_number: String,
     pub email: String,
-    pub categories: Option<Vec<Uuid>>,
+    pub categories: Vec<Category>,
+    pub screens: Vec<Screen>,
 }

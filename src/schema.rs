@@ -23,7 +23,7 @@ diesel::table! {
     addresses (address_id) {
         address_id -> Uuid,
         address_name -> Text,
-        business_id -> Nullable<Uuid>,
+        business_id -> Uuid,
     }
 }
 

@@ -26,7 +26,9 @@ pub struct UpdateAddress {
 
 #[derive(Message)]
 #[rtype(result = "Result<Vec<Address>, AppError>")]
-pub struct GetAllAddresses;
+pub struct GetAllAddresses {
+    pub logger: Logger,
+}
 
 impl Handler<CreateAddress> for DbActor {
     type Result = Result<Address, AppError>;
@@ -38,7 +40,7 @@ impl Handler<CreateAddress> for DbActor {
         let new_address = Address {
             address_id: Uuid::new_v4(),
             address_name: msg.name,
-            business_id: Some(msg.business_id),
+            business_id: msg.business_id,
         };
 
         let result = diesel::insert_into(addresses)
@@ -68,8 +70,9 @@ impl Handler<UpdateAddress> for DbActor {
 impl Handler<GetAllAddresses> for DbActor {
     type Result = Result<Vec<Address>, AppError>;
 
-    fn handle(&mut self, _: GetAllAddresses, _: &mut Self::Context) -> Self::Result {
-        let mut conn = self.0.get()?;
+    fn handle(&mut self, msg: GetAllAddresses, _: &mut Self::Context) -> Self::Result {
+        let sub_log = msg.logger.new(o!("handle" => "get_all_addresses"));
+        let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
         let result = addresses.get_results::<Address>(&mut conn)?;
         Ok(result)
     }
