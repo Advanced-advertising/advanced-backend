@@ -8,10 +8,10 @@ pub mod admin;
 pub mod business;
 pub mod category;
 pub mod images;
+pub mod income;
 pub mod payment;
 pub mod screen;
 pub mod user;
-pub mod income;
 
 fn log_io_error(log: Logger) -> impl Fn(io::Error) -> AppError {
     move |err| {

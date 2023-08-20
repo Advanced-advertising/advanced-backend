@@ -1,4 +1,4 @@
-use crate::actors::ad::{CreateAd, GetAllAds, UpdateAd};
+use crate::actors::ad::{CreateAd, GetAllAds, GetUserAds, UpdateAd};
 use crate::errors::AppError;
 use crate::handlers::log_error;
 use crate::middleware::token::TokenClaims;
@@ -81,4 +81,29 @@ pub async fn get_ads(state: Data<AppState>) -> Result<impl Responder, AppError> 
     result
         .map(|categories| HttpResponse::Ok().json(categories))
         .map_err(log_error(sub_log))
+}
+
+#[get("/get_user_ads")]
+pub async fn get_user_ads(
+    req: Option<ReqData<TokenClaims>>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    match req {
+        Some(user) => {
+            let db = state.as_ref().db.clone();
+            let result = match db.send(GetUserAds {
+                user_id: user.id,
+                logger: state.logger.clone(),
+            }).await {
+                Ok(res) => res,
+                Err(err) => return Err(AppError::from_mailbox(err)),
+            };
+
+            let sub_log = state.logger.new(o!("handle" => "get_user_ads"));
+            result
+                .map(|categories| HttpResponse::Ok().json(categories))
+                .map_err(log_error(sub_log))
+        }
+        _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
+    }
 }

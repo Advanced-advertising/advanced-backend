@@ -1,14 +1,13 @@
-use diesel::{Associations, Insertable, Queryable, Selectable};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use crate::models::ad::Ad;
 use crate::models::ad_order::AdOrder;
 use crate::models::user::User;
+use diesel::{Associations, Insertable, Queryable, Selectable};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::schema::incomes;
 
-#[derive(Debug, Clone)]
-#[derive(Queryable, Insertable, Associations, Selectable)]
+#[derive(Debug, Clone, Queryable, Insertable, Associations, Selectable)]
 #[diesel(belongs_to(AdOrder))]
 #[diesel(table_name = incomes)]
 pub struct Income {

@@ -3,19 +3,21 @@ use crate::errors::{AppError, AppErrorType};
 use crate::models::ad::{Ad, AdStatus};
 use crate::models::ad_order::{AdOrder, AdOrderAllData};
 use crate::models::address::Address;
+use crate::models::income::Income;
 use crate::models::screen::Screen;
 use crate::models::user::User;
 use crate::schema::ad_orders::dsl::ad_orders;
 use crate::schema::ad_orders::{
-    ad_order_id as order_id_column,
-    is_rejected as is_rejected_column,
-    ad_id as ad_orders_ad_id_column,
-    screen_id as ad_orders_screen_id_column,
+    ad_id as ad_orders_ad_id_column, ad_order_id as order_id_column,
+    is_rejected as is_rejected_column, screen_id as ad_orders_screen_id_column,
 };
 use crate::schema::addresses::address_id as address_id_column;
 use crate::schema::addresses::dsl::addresses;
 use crate::schema::ads::dsl::ads;
 use crate::schema::ads::{ad_id as ad_id_column, user_id as ads_user_id_column};
+use crate::schema::businesses::business_id as business_id_column;
+use crate::schema::businesses::dsl::businesses;
+use crate::schema::incomes::dsl::incomes;
 use crate::schema::screens::dsl::screens;
 use crate::schema::screens::{
     address_id as screen_address_id_column, business_id as screen_business_id_column,
@@ -29,10 +31,6 @@ use diesel::expression_methods::ExpressionMethods;
 use diesel::{Connection, JoinOnDsl, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper};
 use slog::{o, Logger};
 use uuid::Uuid;
-use crate::models::income::Income;
-use crate::schema::businesses::{business_id as business_id_column};
-use crate::schema::businesses::dsl::businesses;
-use crate::schema::incomes::dsl::incomes;
 
 #[derive(Message)]
 #[rtype(result = "Result<(), AppError>")]
@@ -156,7 +154,8 @@ impl Handler<ApproveAdOrder> for DbActor {
         let sub_log = msg.logger.new(o!("handle" => "approve_ad_order"));
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
 
-        let wrapped_ad_order: Option<AdOrder> = ad_orders.filter(order_id_column.eq(msg.ad_order_id))
+        let wrapped_ad_order: Option<AdOrder> = ad_orders
+            .filter(order_id_column.eq(msg.ad_order_id))
             .first(&mut conn)
             .optional()?;
 
@@ -166,8 +165,8 @@ impl Handler<ApproveAdOrder> for DbActor {
                     return Err(AppError::new(
                         Some("Add order already approved".to_string()),
                         None,
-                        AppErrorType::RejectedAdError)
-                    );
+                        AppErrorType::RejectedAdError,
+                    ));
                 }
                 ad_order
             }
@@ -175,8 +174,8 @@ impl Handler<ApproveAdOrder> for DbActor {
                 return Err(AppError::new(
                     Some("Add order not found".to_string()),
                     None,
-                    AppErrorType::NotFoundError)
-                );
+                    AppErrorType::NotFoundError,
+                ));
             }
         };
 
@@ -191,8 +190,8 @@ impl Handler<ApproveAdOrder> for DbActor {
             return Err(AppError::new(
                 Some("Business id not found".to_string()),
                 None,
-                AppErrorType::NotFoundError)
-            );
+                AppErrorType::NotFoundError,
+            ));
         } else {
             wrapped_business_id.unwrap()
         };
@@ -227,7 +226,8 @@ impl Handler<RejectAdOrder> for DbActor {
         let sub_log = msg.logger.new(o!("handle" => "reject_ad_order"));
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
 
-        let wrapped_ad_order: Option<AdOrder> = ad_orders.filter(order_id_column.eq(msg.ad_order_id))
+        let wrapped_ad_order: Option<AdOrder> = ad_orders
+            .filter(order_id_column.eq(msg.ad_order_id))
             .first(&mut conn)
             .optional()?;
 
@@ -237,16 +237,16 @@ impl Handler<RejectAdOrder> for DbActor {
                     return Err(AppError::new(
                         Some("Add order already rejected".to_string()),
                         None,
-                        AppErrorType::RejectedAdError)
-                    );
+                        AppErrorType::RejectedAdError,
+                    ));
                 }
             }
             None => {
                 return Err(AppError::new(
                     Some("Add order not found".to_string()),
                     None,
-                    AppErrorType::NotFoundError)
-                );
+                    AppErrorType::NotFoundError,
+                ));
             }
         };
 

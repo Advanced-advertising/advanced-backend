@@ -1,11 +1,11 @@
-use actix_web::{get, HttpResponse, Responder};
-use actix_web::web::{Data, ReqData};
-use slog::o;
 use crate::actors::income::GetAllIncomes;
 use crate::errors::AppError;
 use crate::handlers::log_error;
 use crate::middleware::token::TokenClaims;
 use crate::models::app_state::AppState;
+use actix_web::web::{Data, ReqData};
+use actix_web::{get, HttpResponse, Responder};
+use slog::o;
 
 #[get("/get_all_business_incomes")]
 pub async fn get_all_business_screens(
@@ -16,7 +16,7 @@ pub async fn get_all_business_screens(
         Some(business) => {
             let db = state.as_ref().db.clone();
             let result = match db
-                .send(GetAllIncomes{
+                .send(GetAllIncomes {
                     business_id: business.id,
                     logger: state.logger.clone(),
                 })

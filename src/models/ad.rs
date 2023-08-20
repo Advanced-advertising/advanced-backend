@@ -5,8 +5,7 @@ use uuid::Uuid;
 
 use crate::schema::ads;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Queryable, Insertable, Associations, Selectable)]
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, Associations, Selectable)]
 #[diesel(belongs_to(User))]
 #[diesel(table_name = ads)]
 pub struct Ad {
