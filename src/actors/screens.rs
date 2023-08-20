@@ -80,7 +80,7 @@ impl Handler<CreateScreen> for DbActor {
         let sub_log = msg.logger.new(o!("handle" => "create_screen"));
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
 
-        let new_address = Screen {
+        let new_screen = Screen {
             screen_id: Uuid::new_v4(),
             screen_name: msg.name,
             price_per_time: msg.price_per_time,
@@ -91,7 +91,7 @@ impl Handler<CreateScreen> for DbActor {
         };
 
         let result = diesel::insert_into(screens)
-            .values(new_address)
+            .values(new_screen)
             .get_result::<Screen>(&mut conn)?;
 
         Ok(result)

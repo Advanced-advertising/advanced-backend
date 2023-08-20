@@ -3,6 +3,7 @@ use crate::actors::admin::{AuthorizeAdmin, ChangeAdStatus, CreateAdmin};
 use crate::actors::screens::CreateScreen;
 use crate::errors::AppError;
 use crate::handlers::log_error;
+use crate::models::ad::AdStatusUpdate;
 use crate::models::address::AddressData;
 use crate::models::app_state::AppState;
 use crate::models::screen::ScreenData;
@@ -11,7 +12,6 @@ use actix_web::web::{Data, Json};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::o;
-use crate::models::ad::AdStatusUpdate;
 
 #[post("/create")]
 pub async fn register(

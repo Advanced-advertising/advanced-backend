@@ -8,6 +8,8 @@ use std::fmt;
 #[derive(Debug)]
 pub enum AppErrorType {
     DbError,
+    UnverifiedAdError,
+    RejectedAdError,
     NotFoundError,
     SomethingWentWrong,
     PasswordOrLoginError,
@@ -23,6 +25,13 @@ pub struct AppError {
 }
 
 impl AppError {
+    pub fn new(message: Option<String>, cause: Option<String>, error_type: AppErrorType) -> Self {
+        AppError {
+            message,
+            cause,
+            error_type,
+        }
+    }
     pub fn from_mailbox(error: MailboxError) -> Self {
         Self {
             message: Some("Something went wrong".to_string()),
@@ -115,7 +124,9 @@ impl ResponseError for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR
             }
             AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
-            AppErrorType::PasswordOrLoginError => StatusCode::BAD_REQUEST,
+            AppErrorType::PasswordOrLoginError
+            | AppErrorType::UnverifiedAdError
+            | AppErrorType::RejectedAdError => StatusCode::BAD_REQUEST,
             AuthorizeError => StatusCode::INTERNAL_SERVER_ERROR,
             IoError => StatusCode::INTERNAL_SERVER_ERROR,
         }

@@ -5,8 +5,7 @@ use uuid::Uuid;
 
 use crate::schema::screens;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Associations, Queryable, Insertable, Selectable)]
+#[derive(Debug, Clone, Serialize, Deserialize, Associations, Queryable, Insertable, Selectable)]
 #[diesel(table_name = screens)]
 #[diesel(belongs_to(Business))]
 pub struct Screen {

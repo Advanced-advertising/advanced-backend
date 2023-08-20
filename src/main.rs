@@ -62,8 +62,9 @@ async fn main() -> std::io::Result<()> {
                     .service(
                         web::scope("")
                             .wrap(bearer_middleware.clone())
-                            .app_data(Data::new(vec![Client]))
-                            .service(handlers::user::change_img),
+                            .app_data(Data::new(vec![Client, Admin]))
+                            .service(handlers::user::change_img)
+                            .service(handlers::ad_order::create_ad_order),
                     ),
             )
             .service(
@@ -77,14 +78,14 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/screens")
                     .service(handlers::screen::find_optimal_screens)
                     .service(
-                    web::scope("")
-                        .wrap(bearer_middleware.clone())
-                        .service(handlers::screen::get_all)
-                        .service(handlers::screen::get_screen_data_by_id)
-                        .service(handlers::screen::get_all_business_screens)
-                        .service(handlers::screen::get_all_by_business_id)
-                        .service(handlers::screen::get_all_addresses),
-                ),
+                        web::scope("")
+                            .wrap(bearer_middleware.clone())
+                            .service(handlers::screen::get_all)
+                            .service(handlers::screen::get_screen_data_by_id)
+                            .service(handlers::screen::get_all_business_screens)
+                            .service(handlers::screen::get_all_by_business_id)
+                            .service(handlers::screen::get_all_addresses),
+                    ),
             )
             .service(
                 web::scope("/businesses")

@@ -2,8 +2,11 @@ use crate::actors::db::{get_pooled_connection, DbActor};
 use crate::errors::AppError;
 use crate::middleware::token::authorize;
 use crate::middleware::token::Role::Admin as AdminRole;
+use crate::models::ad::AdStatus;
 use crate::models::admin::Admin;
 use crate::schema::admin::dsl::{admin as admin_table, admin_name as admin_name_column};
+use crate::schema::ads::dsl::ads;
+use crate::schema::ads::{ad_id as ad_id_column, status as status_column};
 use actix::{Handler, Message};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use argonautica::Hasher;
@@ -11,12 +14,6 @@ use diesel::prelude::*;
 use serde::Deserialize;
 use slog::{o, Logger};
 use uuid::Uuid;
-use crate::models::ad::AdStatus;
-use crate::schema::ads::dsl::ads;
-use crate::schema::ads::{
-    ad_id as ad_id_column,
-    status as status_column,
-};
 
 #[derive(Message)]
 #[rtype(result = "Result<Admin, AppError>")]
