@@ -113,7 +113,8 @@ async fn main() -> std::io::Result<()> {
                             .wrap(bearer_middleware)
                             .app_data(Data::new(vec![Admin]))
                             .service(handlers::admin::create_screen)
-                            .service(handlers::admin::create_address),
+                            .service(handlers::admin::create_address)
+                            .service(handlers::admin::change_ad_status),
                     ),
             )
     })

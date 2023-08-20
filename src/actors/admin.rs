@@ -11,6 +11,12 @@ use diesel::prelude::*;
 use serde::Deserialize;
 use slog::{o, Logger};
 use uuid::Uuid;
+use crate::models::ad::AdStatus;
+use crate::schema::ads::dsl::ads;
+use crate::schema::ads::{
+    ad_id as ad_id_column,
+    status as status_column,
+};
 
 #[derive(Message)]
 #[rtype(result = "Result<Admin, AppError>")]
@@ -31,6 +37,14 @@ pub struct AuthorizeAdmin {
 pub struct ChangeImg {
     pub user_id: Uuid,
     pub img_url: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<(), AppError>")]
+pub struct ChangeAdStatus {
+    pub ad_id: Uuid,
+    pub new_status: AdStatus,
+    pub logger: Logger,
 }
 
 impl Handler<CreateAdmin> for DbActor {
@@ -79,5 +93,20 @@ impl Handler<AuthorizeAdmin> for DbActor {
             vec![AdminRole],
             msg.basic_auth,
         )
+    }
+}
+
+impl Handler<ChangeAdStatus> for DbActor {
+    type Result = Result<(), AppError>;
+
+    fn handle(&mut self, msg: ChangeAdStatus, _: &mut Self::Context) -> Self::Result {
+        let sub_log = msg.logger.new(o!("handle" => "create_admin"));
+        let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
+
+        diesel::update(ads.filter(ad_id_column.eq(msg.ad_id)))
+            .set(status_column.eq(msg.new_status.to_string()))
+            .execute(&mut conn)?;
+
+        Ok(())
     }
 }

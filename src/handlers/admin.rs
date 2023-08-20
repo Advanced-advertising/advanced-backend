@@ -1,5 +1,5 @@
 use crate::actors::address::CreateAddress;
-use crate::actors::admin::{AuthorizeAdmin, CreateAdmin};
+use crate::actors::admin::{AuthorizeAdmin, ChangeAdStatus, CreateAdmin};
 use crate::actors::screens::CreateScreen;
 use crate::errors::AppError;
 use crate::handlers::log_error;
@@ -11,6 +11,7 @@ use actix_web::web::{Data, Json};
 use actix_web::{get, post, HttpResponse, Responder};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use slog::o;
+use crate::models::ad::AdStatusUpdate;
 
 #[post("/create")]
 pub async fn register(
@@ -112,5 +113,31 @@ pub async fn create_screen(
     let sub_log = state.logger.new(o!("handle" => "create_screen"));
     result
         .map(|screen| HttpResponse::Ok().json(screen))
+        .map_err(log_error(sub_log))
+}
+
+#[post("/change_ad_status")]
+pub async fn change_ad_status(
+    ad_data: Json<AdStatusUpdate>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let ad_data = ad_data.into_inner();
+
+    let result = match db
+        .send(ChangeAdStatus {
+            ad_id: ad_data.ad_id,
+            new_status: ad_data.new_status,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "ad_update_status"));
+    result
+        .map(|status| HttpResponse::Ok().json(status))
         .map_err(log_error(sub_log))
 }

@@ -42,6 +42,13 @@ pub struct AdDataUpdate {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct AdStatusUpdate {
+    pub ad_id: Uuid,
+    pub new_status: AdStatus,
+}
+
+
+#[derive(Serialize, Deserialize)]
 pub enum AdStatus {
     Unverified,
 }
