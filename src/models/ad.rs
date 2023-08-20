@@ -1,10 +1,13 @@
-use diesel::{Insertable, Queryable};
+use diesel::{Associations, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::models::user::User;
 
 use crate::schema::ads;
 
-#[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Queryable, Insertable, Associations, Selectable)]
+#[diesel(belongs_to(User))]
 #[diesel(table_name = ads)]
 pub struct Ad {
     pub ad_id: Uuid,
@@ -12,6 +15,15 @@ pub struct Ad {
     pub img_url: String,
     pub status: String,
     pub user_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AdAllData {
+    pub ad_id: Uuid,
+    pub ad_name: String,
+    pub img_url: String,
+    pub status: String,
+    pub user: User,
 }
 
 #[derive(Serialize, Deserialize)]

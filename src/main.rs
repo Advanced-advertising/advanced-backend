@@ -100,6 +100,7 @@ async fn main() -> std::io::Result<()> {
                             .service(handlers::business::get_business_info)
                             .service(handlers::business::change_img)
                             .service(handlers::business::change_business_info)
+                            .service(handlers::ad_order::get_business_ad_orders)
                             .service(handlers::business::get_categories),
                     ),
             )

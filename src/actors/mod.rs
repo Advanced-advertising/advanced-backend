@@ -7,3 +7,4 @@ pub mod db;
 pub mod income;
 pub mod screens;
 pub mod user;
+pub mod ad_order;
