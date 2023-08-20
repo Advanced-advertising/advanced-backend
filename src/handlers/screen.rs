@@ -1,13 +1,16 @@
 use crate::actors::address::GetAllAddresses;
-use crate::actors::screens::{GetAllScreens, GetAllScreensByBusinessId, GetScreenDataById};
+use crate::actors::screens::{
+    GetAllScreens, GetAllScreensByBusinessId, GetOptimalScreens, GetScreenDataById,
+};
 use crate::errors::AppError;
 use crate::handlers::log_error;
+use crate::middleware::token::TokenClaims;
 use crate::models::app_state::AppState;
+use crate::models::screen::{OptimalScreensData, ScreenId};
 use actix_web::web::{Data, Json, ReqData};
-use actix_web::{get, HttpResponse, post, Responder};
+use actix_web::{get, post, HttpResponse, Responder};
 use slog::o;
 use uuid::Uuid;
-use crate::middleware::token::TokenClaims;
 
 #[get("/get_all")]
 pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> {
@@ -31,7 +34,7 @@ pub async fn get_all(state: Data<AppState>) -> Result<impl Responder, AppError> 
 #[post("/get_all_by_business_id")]
 pub async fn get_all_by_business_id(
     business_id: Json<Uuid>,
-    state: Data<AppState>
+    state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
     let business_id = business_id.into_inner();
@@ -46,7 +49,9 @@ pub async fn get_all_by_business_id(
         Err(err) => return Err(AppError::from_mailbox(err)),
     };
 
-    let sub_log = state.logger.new(o!("handle" => "get_all_screens_by_business_id"));
+    let sub_log = state
+        .logger
+        .new(o!("handle" => "get_all_screens_by_business_id"));
     result
         .map(|screens| HttpResponse::Ok().json(screens))
         .map_err(log_error(sub_log))
@@ -55,7 +60,7 @@ pub async fn get_all_by_business_id(
 #[get("/get_all_business_screens")]
 pub async fn get_all_business_screens(
     req: Option<ReqData<TokenClaims>>,
-    state: Data<AppState>
+    state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
     match req {
         Some(business) => {
@@ -78,19 +83,18 @@ pub async fn get_all_business_screens(
         }
         _ => Ok(HttpResponse::Unauthorized().json("Unable to verify identity")),
     }
-
 }
 
 #[post("/get_screen_data_by_id")]
 pub async fn get_screen_data_by_id(
-    screen_id: Json<Uuid>,
-    state: Data<AppState>
+    screen_id: Json<ScreenId>,
+    state: Data<AppState>,
 ) -> Result<impl Responder, AppError> {
     let db = state.as_ref().db.clone();
     let screen_id = screen_id.into_inner();
     let result = match db
         .send(GetScreenDataById {
-            screen_id,
+            screen_id: screen_id.screen_id,
             logger: state.logger.clone(),
         })
         .await
@@ -121,5 +125,31 @@ pub async fn get_all_addresses(state: Data<AppState>) -> Result<impl Responder, 
     let sub_log = state.logger.new(o!("handle" => "get_all_addresses"));
     result
         .map(|addresses| HttpResponse::Ok().json(addresses))
+        .map_err(log_error(sub_log))
+}
+
+#[post("/find_optimal_screens")]
+pub async fn find_optimal_screens(
+    opt_screens_data: Json<OptimalScreensData>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let opt_screens_data = opt_screens_data.into_inner();
+
+    let result = match db
+        .send(GetOptimalScreens {
+            user_budget: opt_screens_data.user_budget,
+            ad_category_ids: opt_screens_data.ad_category_ids,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "find_optimal_screens"));
+    result
+        .map(|screen_data| HttpResponse::Ok().json(screen_data))
         .map_err(log_error(sub_log))
 }

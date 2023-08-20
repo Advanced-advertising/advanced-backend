@@ -83,7 +83,6 @@ pub async fn create_address(
     result
         .map(|business| HttpResponse::Ok().json(business))
         .map_err(log_error(sub_log))
-
 }
 
 #[post("/create_screen")]

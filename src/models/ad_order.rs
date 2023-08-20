@@ -1,8 +1,8 @@
+use crate::models::ad::Ad;
 use diesel::data_types::PgTimestamp;
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::ad::Ad;
 
 use crate::schema::ad_orders;
 

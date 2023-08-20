@@ -75,12 +75,16 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 web::scope("/screens")
-                    .wrap(bearer_middleware.clone())
-                    .service(handlers::screen::get_all)
-                    .service(handlers::screen::get_screen_data_by_id)
-                    .service(handlers::screen::get_all_business_screens)
-                    .service(handlers::screen::get_all_by_business_id)
-                    .service(handlers::screen::get_all_addresses),
+                    .service(handlers::screen::find_optimal_screens)
+                    .service(
+                    web::scope("")
+                        .wrap(bearer_middleware.clone())
+                        .service(handlers::screen::get_all)
+                        .service(handlers::screen::get_screen_data_by_id)
+                        .service(handlers::screen::get_all_business_screens)
+                        .service(handlers::screen::get_all_by_business_id)
+                        .service(handlers::screen::get_all_addresses),
+                ),
             )
             .service(
                 web::scope("/businesses")
@@ -104,12 +108,12 @@ async fn main() -> std::io::Result<()> {
                     .service(handlers::admin::register)
                     .service(handlers::admin::login)
                     .service(
-                    web::scope("")
-                        .wrap(bearer_middleware)
-                        .app_data(Data::new(vec![Admin]))
-                        .service(handlers::admin::create_screen)
-                        .service(handlers::admin::create_address),
-                ),
+                        web::scope("")
+                            .wrap(bearer_middleware)
+                            .app_data(Data::new(vec![Admin]))
+                            .service(handlers::admin::create_screen)
+                            .service(handlers::admin::create_address),
+                    ),
             )
     })
     .bind(format!("{}:{}", config.server.host, config.server.port))?

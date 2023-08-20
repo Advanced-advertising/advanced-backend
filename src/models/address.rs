@@ -9,7 +9,7 @@ use crate::schema::addresses;
 pub struct Address {
     pub address_id: Uuid,
     pub address_name: String,
-    pub business_id: Uuid
+    pub business_id: Uuid,
 }
 
 #[derive(Serialize, Deserialize)]
