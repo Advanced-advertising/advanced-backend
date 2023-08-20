@@ -1,6 +1,6 @@
 -- Your SQL goes here
 CREATE TABLE ad_orders (
-                           order_id UUID PRIMARY KEY NOT NULL,
+                           ad_order_id UUID PRIMARY KEY NOT NULL,
                            start_time TIMESTAMPTZ NOT NULL,
                            end_time TIMESTAMPTZ NOT NULL,
                            price double precision NOT NULL,

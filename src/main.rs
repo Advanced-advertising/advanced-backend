@@ -99,10 +99,11 @@ async fn main() -> std::io::Result<()> {
                             .wrap(bearer_middleware.clone())
                             .app_data(Data::new(vec![BusinessRole, Admin]))
                             .service(handlers::business::get_business_info)
-                            .service(handlers::business::change_img)
-                            .service(handlers::business::change_business_info)
                             .service(handlers::ad_order::get_business_ad_orders)
                             .service(handlers::business::get_categories)
+                            .service(handlers::income::get_all_business_screens)
+                            .service(handlers::business::change_img)
+                            .service(handlers::business::change_business_info)
                             .service(handlers::ad_order::reject_ad_order)
                             .service(handlers::ad_order::approve_ad_order)
                     ),

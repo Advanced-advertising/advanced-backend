@@ -7,7 +7,7 @@ use crate::models::screen::Screen;
 use crate::models::user::User;
 use crate::schema::ad_orders::dsl::ad_orders;
 use crate::schema::ad_orders::{
-    order_id as order_id_column,
+    ad_order_id as order_id_column,
     is_rejected as is_rejected_column,
     ad_id as ad_orders_ad_id_column,
     screen_id as ad_orders_screen_id_column,
@@ -91,7 +91,7 @@ impl Handler<CreateAdOrder> for DbActor {
         let end_time = PgTimestamp(msg.end_time);
 
         let new_ad_order = AdOrder {
-            order_id: Uuid::new_v4(),
+            ad_order_id: Uuid::new_v4(),
             start_time,
             end_time,
             price: msg.price,
@@ -133,7 +133,7 @@ impl Handler<GetBusinessAdOrders> for DbActor {
         let ad_orders_all_data = ad_orders_data
             .into_iter()
             .map(|(ad, client, screen, address, ad_order)| AdOrderAllData {
-                order_id: ad_order.order_id,
+                order_id: ad_order.ad_order_id,
                 start_time: ad_order.start_time.0,
                 end_time: ad_order.end_time.0,
                 price: ad_order.price,
@@ -201,7 +201,7 @@ impl Handler<ApproveAdOrder> for DbActor {
             income_id: Uuid::new_v4(),
             income: ad_order.price,
             business_id,
-            order_id: ad_order.order_id,
+            ad_order_id: ad_order.ad_order_id,
         };
 
         conn.transaction::<_, diesel::result::Error, _>(|conn| {

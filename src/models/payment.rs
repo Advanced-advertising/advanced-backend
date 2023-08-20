@@ -10,7 +10,7 @@ pub struct Payment {
     pub payment_id: Uuid,
     pub price: f64,
     pub user_id: Uuid,
-    pub order_id: Uuid,
+    pub ad_order_id: Uuid,
 }
 
 #[derive(Serialize, Deserialize)]

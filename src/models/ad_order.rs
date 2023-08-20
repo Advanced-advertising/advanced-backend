@@ -11,7 +11,7 @@ use crate::schema::ad_orders;
 #[derive(Debug, Clone, Queryable, Insertable, Selectable)]
 #[diesel(table_name = ad_orders)]
 pub struct AdOrder {
-    pub order_id: Uuid,
+    pub ad_order_id: Uuid,
     pub start_time: PgTimestamp,
     pub end_time: PgTimestamp,
     pub price: f64,

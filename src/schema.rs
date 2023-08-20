@@ -8,8 +8,8 @@ diesel::table! {
 }
 
 diesel::table! {
-    ad_orders (order_id) {
-        order_id -> Uuid,
+    ad_orders (ad_order_id) {
+        ad_order_id -> Uuid,
         start_time -> Timestamptz,
         end_time -> Timestamptz,
         price -> Float8,
@@ -75,7 +75,7 @@ diesel::table! {
         income_id -> Uuid,
         income -> Float8,
         business_id -> Uuid,
-        order_id -> Uuid,
+        ad_order_id -> Uuid,
     }
 }
 
@@ -84,7 +84,7 @@ diesel::table! {
         payment_id -> Uuid,
         price -> Float8,
         user_id -> Uuid,
-        order_id -> Uuid,
+        ad_order_id -> Uuid,
     }
 }
 
@@ -119,9 +119,9 @@ diesel::joinable!(addresses -> businesses (business_id));
 diesel::joinable!(ads -> users (user_id));
 diesel::joinable!(business_categories -> businesses (business_id));
 diesel::joinable!(business_categories -> categories (category_id));
-diesel::joinable!(incomes -> ad_orders (order_id));
+diesel::joinable!(incomes -> ad_orders (ad_order_id));
 diesel::joinable!(incomes -> businesses (business_id));
-diesel::joinable!(payments -> ad_orders (order_id));
+diesel::joinable!(payments -> ad_orders (ad_order_id));
 diesel::joinable!(payments -> users (user_id));
 diesel::joinable!(screens -> addresses (address_id));
 diesel::joinable!(screens -> businesses (business_id));
