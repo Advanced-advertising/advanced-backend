@@ -7,7 +7,10 @@ use crate::models::screen::Screen;
 use crate::models::user::User;
 use crate::schema::ad_orders::dsl::ad_orders;
 use crate::schema::ad_orders::{
-    ad_id as ad_orders_ad_id_column, screen_id as ad_orders_screen_id_column,
+    order_id as order_id_column,
+    is_rejected as is_rejected_column,
+    ad_id as ad_orders_ad_id_column,
+    screen_id as ad_orders_screen_id_column,
 };
 use crate::schema::addresses::address_id as address_id_column;
 use crate::schema::addresses::dsl::addresses;
@@ -23,9 +26,13 @@ use crate::schema::users::user_id as user_id_column;
 use actix::{Handler, Message};
 use diesel::data_types::PgTimestamp;
 use diesel::expression_methods::ExpressionMethods;
-use diesel::{JoinOnDsl, QueryDsl, RunQueryDsl, SelectableHelper};
+use diesel::{Connection, JoinOnDsl, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper};
 use slog::{o, Logger};
 use uuid::Uuid;
+use crate::models::income::Income;
+use crate::schema::businesses::{business_id as business_id_column};
+use crate::schema::businesses::dsl::businesses;
+use crate::schema::incomes::dsl::incomes;
 
 #[derive(Message)]
 #[rtype(result = "Result<(), AppError>")]
@@ -42,6 +49,20 @@ pub struct CreateAdOrder {
 #[rtype(result = "Result<Vec<AdOrderAllData>, AppError>")]
 pub struct GetBusinessAdOrders {
     pub business_id: Uuid,
+    pub logger: Logger,
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<(), AppError>")]
+pub struct RejectAdOrder {
+    pub ad_order_id: Uuid,
+    pub logger: Logger,
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<(), AppError>")]
+pub struct ApproveAdOrder {
+    pub ad_order_id: Uuid,
     pub logger: Logger,
 }
 
@@ -125,5 +146,114 @@ impl Handler<GetBusinessAdOrders> for DbActor {
             .collect();
 
         Ok(ad_orders_all_data)
+    }
+}
+
+impl Handler<ApproveAdOrder> for DbActor {
+    type Result = Result<(), AppError>;
+
+    fn handle(&mut self, msg: ApproveAdOrder, _: &mut Self::Context) -> Self::Result {
+        let sub_log = msg.logger.new(o!("handle" => "approve_ad_order"));
+        let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
+
+        let wrapped_ad_order: Option<AdOrder> = ad_orders.filter(order_id_column.eq(msg.ad_order_id))
+            .first(&mut conn)
+            .optional()?;
+
+        let ad_order = match wrapped_ad_order {
+            Some(ad_order) => {
+                if !ad_order.is_rejected {
+                    return Err(AppError::new(
+                        Some("Add order already approved".to_string()),
+                        None,
+                        AppErrorType::RejectedAdError)
+                    );
+                }
+                ad_order
+            }
+            None => {
+                return Err(AppError::new(
+                    Some("Add order not found".to_string()),
+                    None,
+                    AppErrorType::NotFoundError)
+                );
+            }
+        };
+
+        let wrapped_business_id: Option<Uuid> = screens
+            .filter(screen_id_column.eq(ad_order.screen_id))
+            .inner_join(businesses)
+            .select(business_id_column)
+            .first(&mut conn)
+            .optional()?;
+
+        let business_id = if wrapped_business_id.is_none() {
+            return Err(AppError::new(
+                Some("Business id not found".to_string()),
+                None,
+                AppErrorType::NotFoundError)
+            );
+        } else {
+            wrapped_business_id.unwrap()
+        };
+
+        let new_income = Income {
+            income_id: Uuid::new_v4(),
+            income: ad_order.price,
+            business_id,
+            order_id: ad_order.order_id,
+        };
+
+        conn.transaction::<_, diesel::result::Error, _>(|conn| {
+            diesel::insert_into(incomes)
+                .values(new_income)
+                .get_result::<Income>(conn)?;
+
+            diesel::update(ad_orders.filter(order_id_column.eq(msg.ad_order_id)))
+                .set(is_rejected_column.eq(false))
+                .execute(conn)?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+}
+
+impl Handler<RejectAdOrder> for DbActor {
+    type Result = Result<(), AppError>;
+
+    fn handle(&mut self, msg: RejectAdOrder, _: &mut Self::Context) -> Self::Result {
+        let sub_log = msg.logger.new(o!("handle" => "reject_ad_order"));
+        let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
+
+        let wrapped_ad_order: Option<AdOrder> = ad_orders.filter(order_id_column.eq(msg.ad_order_id))
+            .first(&mut conn)
+            .optional()?;
+
+        match wrapped_ad_order {
+            Some(ad_order) => {
+                if ad_order.is_rejected {
+                    return Err(AppError::new(
+                        Some("Add order already rejected".to_string()),
+                        None,
+                        AppErrorType::RejectedAdError)
+                    );
+                }
+            }
+            None => {
+                return Err(AppError::new(
+                    Some("Add order not found".to_string()),
+                    None,
+                    AppErrorType::NotFoundError)
+                );
+            }
+        };
+
+        diesel::update(ad_orders.filter(order_id_column.eq(msg.ad_order_id)))
+            .set(is_rejected_column.eq(true))
+            .execute(&mut conn)?;
+
+        Ok(())
     }
 }

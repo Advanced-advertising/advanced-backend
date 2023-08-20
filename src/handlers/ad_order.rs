@@ -1,4 +1,4 @@
-use crate::actors::ad_order::{CreateAdOrder, GetBusinessAdOrders};
+use crate::actors::ad_order::{ApproveAdOrder, CreateAdOrder, GetBusinessAdOrders, RejectAdOrder};
 use crate::errors::AppError;
 use crate::handlers::log_error;
 use crate::middleware::token::TokenClaims;
@@ -6,7 +6,7 @@ use crate::models::app_state::AppState;
 use actix_web::web::{Data, Json, ReqData};
 use actix_web::{get, HttpResponse, post, Responder};
 use slog::o;
-use crate::models::ad_order::AdOrderData;
+use crate::models::ad_order::{AdOrderData, AdOrderId};
 
 #[get("/get_business_ad_orders")]
 pub async fn get_business_ad_orders(
@@ -61,6 +61,56 @@ pub async fn create_ad_order(
     };
 
     let sub_log = state.logger.new(o!("handle" => "create_ad_order"));
+    result
+        .map(|ad_order| HttpResponse::Ok().json(ad_order))
+        .map_err(log_error(sub_log))
+}
+
+#[post("/reject_ad_order")]
+pub async fn reject_ad_order(
+    ad_order_id: Json<AdOrderId>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let ad_order_id = ad_order_id.into_inner().order_id;
+
+    let result = match db
+        .send(RejectAdOrder {
+            ad_order_id,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "reject_ad_order"));
+    result
+        .map(|ad_order| HttpResponse::Ok().json(ad_order))
+        .map_err(log_error(sub_log))
+}
+
+#[post("/approve_ad_order")]
+pub async fn approve_ad_order(
+    ad_order_id: Json<AdOrderId>,
+    state: Data<AppState>,
+) -> Result<impl Responder, AppError> {
+    let db = state.as_ref().db.clone();
+    let ad_order_id = ad_order_id.into_inner().order_id;
+
+    let result = match db
+        .send(ApproveAdOrder {
+            ad_order_id,
+            logger: state.logger.clone(),
+        })
+        .await
+    {
+        Ok(res) => res,
+        Err(err) => return Err(AppError::from_mailbox(err)),
+    };
+
+    let sub_log = state.logger.new(o!("handle" => "approve_ad_order"));
     result
         .map(|ad_order| HttpResponse::Ok().json(ad_order))
         .map_err(log_error(sub_log))

@@ -84,7 +84,7 @@ async fn main() -> std::io::Result<()> {
                             .service(handlers::screen::get_screen_data_by_id)
                             .service(handlers::screen::get_all_business_screens)
                             .service(handlers::screen::get_all_by_business_id)
-                            .service(handlers::screen::get_all_addresses),
+                            .service(handlers::screen::get_all_addresses)
                     ),
             )
             .service(
@@ -102,7 +102,9 @@ async fn main() -> std::io::Result<()> {
                             .service(handlers::business::change_img)
                             .service(handlers::business::change_business_info)
                             .service(handlers::ad_order::get_business_ad_orders)
-                            .service(handlers::business::get_categories),
+                            .service(handlers::business::get_categories)
+                            .service(handlers::ad_order::reject_ad_order)
+                            .service(handlers::ad_order::approve_ad_order)
                     ),
             )
             .service(

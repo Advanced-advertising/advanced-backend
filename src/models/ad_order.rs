@@ -30,6 +30,11 @@ pub struct AdOrderData {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct AdOrderId {
+    pub order_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct AdOrderAllData {
     pub order_id: Uuid,
     pub start_time: i64,
