@@ -23,6 +23,7 @@ pub async fn create(
                 .send(CreateAd {
                     ad_name: ad_data.ad_name,
                     user_id: user.id,
+                    categories_id: ad_data.categories_id,
                     img_url: ad_data.img_url,
                     logger: state.logger.clone(),
                 })

@@ -28,8 +28,8 @@ pub struct AdAllData {
 #[derive(Serialize, Deserialize)]
 pub struct AdData {
     pub ad_name: String,
+    pub categories_id: Vec<Uuid>,
     pub img_url: String,
-    pub user_id: Uuid,
 }
 
 #[derive(Serialize, Deserialize)]

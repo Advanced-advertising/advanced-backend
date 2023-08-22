@@ -5,9 +5,11 @@ use crate::schema::ads::dsl::ads;
 use crate::schema::ads::{ad_id, ad_name, img_url, user_id};
 use actix::{Handler, Message};
 use diesel::expression_methods::ExpressionMethods;
-use diesel::{QueryDsl, RunQueryDsl};
+use diesel::{Connection, QueryDsl, RunQueryDsl};
 use slog::{o, Logger};
 use uuid::Uuid;
+use crate::models::category::AdCategory;
+use crate::schema::ad_categories::dsl::ad_categories;
 
 #[derive(Message)]
 #[rtype(result = "Result<Ad, AppError>")]
@@ -15,6 +17,7 @@ pub struct CreateAd {
     pub ad_name: String,
     pub img_url: String,
     pub user_id: Uuid,
+    pub categories_id: Vec<Uuid>,
     pub logger: Logger,
 }
 
@@ -47,16 +50,34 @@ impl Handler<CreateAd> for DbActor {
         let mut conn = get_pooled_connection(&self.0, sub_log.clone())?;
 
         let new_ad = Ad {
-            ad_id: Default::default(),
+            ad_id: Uuid::new_v4(),
             ad_name: msg.ad_name,
             img_url: msg.img_url,
             status: AdStatus::Unverified.to_string(),
             user_id: msg.user_id,
         };
 
-        let result = diesel::insert_into(ads)
-            .values(new_ad)
-            .get_result::<Ad>(&mut conn)?;
+        let result = conn.transaction::<_, diesel::result::Error, _>(|conn| {
+            let ad = diesel::insert_into(ads)
+                .values(new_ad.clone())
+                .get_result::<Ad>(conn)?;
+
+            let mut ad_cats: Vec<AdCategory> = Vec::new();
+            for ad_cat_id in msg.categories_id {
+                let ad_category = AdCategory {
+                    ad_id: new_ad.ad_id.clone(),
+                    category_id: ad_cat_id,
+                };
+                ad_cats.push(ad_category);
+            }
+
+
+            diesel::insert_into(ad_categories)
+                .values(ad_cats)
+                .get_result::<AdCategory>(conn)?;
+
+            Ok(ad)
+        })?;
 
         Ok(result)
     }

@@ -93,7 +93,7 @@ impl Handler<CreateAdOrder> for DbActor {
             start_time,
             end_time,
             price: msg.price,
-            is_rejected: false,
+            is_rejected: true,
             ad_id: msg.ad_id,
             screen_id: msg.screen_id,
         };
